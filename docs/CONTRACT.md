@@ -71,6 +71,20 @@ report failure. Fresh marked report directories use pending files and JSON last;
 missing/invalid output after response loss is not success. Reports include source/
 build/version and limits without raw exceptions or absolute private paths. Hashes
 bind bytes, not source rights or authenticity.
+Comparison reports name bookId (audited book), declaredBookId (statement claim),
+and statementSha256 from the exact already-read input byte buffer. On mismatch
+these IDs remain distinct; the declared value never replaces the audited identity.
+snapshotDigestSchema is synthetic-ledger-snapshot-v1. snapshotReceiptListSha256
+hashes UTF-8 bytes with no BOM/newline of compact JSON in this exact property order:
+{"schema":"synthetic-ledger-snapshot-v1","bookId":"<audited id>","throughSequence":2,"receipts":[{"sequence":1,"receiptSha256":"<hash1>"},{"sequence":2,"receiptSha256":"<hash2>"}]}
+Receipts are in ascending audited sequence order. Each receiptSha256 hashes the
+exact saved receipt TEXT encoded as UTF-8 without adding a newline; the audit
+already verifies these bytes against the saved hash/canonical receipt. Empty
+books use throughSequence0 and receipts[]. The comparison result names that same
+snapshot's last sequence; an append after snapshot capture changes none of its
+book/sequence/frame fields. This framing is versioned independently of SQLite.
+Init/post/reconcile stdout also includes version/toolBuild; saved receipt bytes
+remain independent of the current invocation's outer version/disposition.
 
 Public MIT reusable synthetic sample; customer-specific code/data/config/deployments,
 secrets and unreleased commercial additions remain separate private work. No transfer

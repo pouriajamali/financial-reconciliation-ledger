@@ -13,11 +13,11 @@ internal static class Program
             switch (args)
             {
                 case ["init", var target]:
-                    string nonce = Store.Init(target); report = new { schema = "synthetic-ledger-init-v1", complete = true, outcome = "pass", profile = Contract.Profile, bookId = nonce, unit = "LAB", scale = 2, limits = Report.Limits }; break;
+                    string nonce = Store.Init(target); report = new { schema = "synthetic-ledger-init-v1", version = Contract.Version, toolBuild = Report.Build, complete = true, outcome = "pass", profile = Contract.Profile, bookId = nonce, unit = "LAB", scale = 2, limits = Report.Limits }; break;
                 case ["post", var folder, var input]:
-                    var post = Post.Parse(Safe.Read(input)); var result = Store.Apply(folder, post); report = new { schema = "synthetic-ledger-operation-v1", complete = true, outcome = "pass", result, limits = Report.Limits }; break;
+                    var post = Post.Parse(Safe.Read(input)); var result = Store.Apply(folder, post); report = new { schema = "synthetic-ledger-operation-v1", version = Contract.Version, toolBuild = Report.Build, complete = true, outcome = "pass", result, limits = Report.Limits }; break;
                 case ["reconcile", var folder, var input, var output]:
-                    var comparison = Reconcile.Run(folder, input, output); exit = comparison.ExitCode; report = new { schema = "synthetic-ledger-operation-v1", complete = true, outcome = comparison.Outcome, result = comparison, limits = Report.Limits }; break;
+                    var comparison = Reconcile.Run(folder, input, output); exit = comparison.ExitCode; report = new { schema = "synthetic-ledger-operation-v1", version = Contract.Version, toolBuild = Report.Build, complete = true, outcome = comparison.Outcome, result = comparison, limits = Report.Limits }; break;
                 case ["demo", var output]: report = Demo.Run(output); break;
                 default: throw new Problem("CLI_INVALID");
             }
@@ -26,7 +26,7 @@ internal static class Program
         catch (Exception e) when (e is not OutOfMemoryException)
         {
             var p = e as Problem; bool rejected = p?.Rejected == true; int exit = rejected ? 2 : 1;
-            Console.WriteLine(Contract.Serialize(new { complete = rejected, outcome = rejected ? "rejected" : "incomplete", exitCode = exit, reason = p?.Code ?? "IO_SQLITE_OR_CONFIGURATION_FAILURE", limits = Report.Limits })); return exit;
+            Console.WriteLine(Contract.Serialize(new { schema = "synthetic-ledger-error-v1", version = Contract.Version, toolBuild = Report.Build, complete = rejected, outcome = rejected ? "rejected" : "incomplete", exitCode = exit, reason = p?.Code ?? "IO_SQLITE_OR_CONFIGURATION_FAILURE", limits = Report.Limits })); return exit;
         }
     }
 }

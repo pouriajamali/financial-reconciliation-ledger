@@ -12,6 +12,7 @@ internal sealed record Comparison(bool Complete, string Outcome, int SnapshotSeq
 
 internal static class Reconcile
 {
+    public const string DigestSchema = "synthetic-ledger-snapshot-v1";
     internal static Action? SnapshotForTests = null;
     public static Comparison Compare(BookSnapshot book, Statement statement)
     {
@@ -35,9 +36,11 @@ internal static class Reconcile
     {
         folder = Safe.Normalize(folder); input = Safe.Normalize(input); output = Safe.Normalize(output);
         Safe.Separate(output, folder); Safe.Separate(output, input);
-        var statement = Statement.Parse(Safe.Read(input)); var book = Store.Snapshot(folder);
+        byte[] statementBytes = Safe.Read(input); var statement = Statement.Parse(statementBytes); var book = Store.Snapshot(folder);
         SnapshotForTests?.Invoke(); // A later append is outside the named snapshot.
-        var result = Compare(book, statement); Report.Write(output, new { schema = "synthetic-reconciliation-report-v1", version = Contract.Version, toolBuild = Report.Build, result, limits = Report.Limits }); return result;
+        string snapshotReceiptListSha256 = Contract.Hash(Contract.Serialize(new { schema = DigestSchema, bookId = book.BookId, throughSequence = book.LastSequence, receipts = book.Entries.Select(e => new { sequence = e.Sequence, receiptSha256 = e.ReceiptSha256 }).ToArray() }));
+        var result = Compare(book, statement);
+        Report.Write(output, new { schema = "synthetic-reconciliation-report-v1", version = Contract.Version, toolBuild = Report.Build, bookId = book.BookId, declaredBookId = statement.BookId, statementSha256 = Contract.Hash(statementBytes), snapshotDigestSchema = DigestSchema, snapshotReceiptListSha256, result, limits = Report.Limits }); return result;
     }
 }
 

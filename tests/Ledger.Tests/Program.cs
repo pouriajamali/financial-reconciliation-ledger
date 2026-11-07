@@ -20,6 +20,8 @@ internal static class Program
     private static (string Folder, string Id) Book(string name) { string folder = Fresh(name); return (folder, Store.Init(folder)); }
     private static byte[] Bytes(string value) => Encoding.UTF8.GetBytes(value);
     private static string StatementJson(string book, int seq, params StatementRow[] rows) => Contract.Serialize(new { schema = "synthetic-statement-v1", bookId = book, unit = "LAB", scale = 2, throughSequence = seq, rows });
+    private static string LiteralSnapshotFrame(BookSnapshot book)
+        => "{\"schema\":\"synthetic-ledger-snapshot-v1\",\"bookId\":\"" + book.BookId + "\",\"throughSequence\":" + book.LastSequence.ToString(System.Globalization.CultureInfo.InvariantCulture) + ",\"receipts\":[" + string.Join(",", book.Entries.Select(e => "{\"sequence\":" + e.Sequence.ToString(System.Globalization.CultureInfo.InvariantCulture) + ",\"receiptSha256\":\"" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Bytes(e.Receipt))).ToLowerInvariant() + "\"}")) + "]}";
     private static void Sql(string folder, string sql)
     {
         using var c = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = Path.Combine(folder, "book.sqlite"), Mode = SqliteOpenMode.ReadWrite, Pooling = false }.ToString()); c.Open();
@@ -228,10 +230,44 @@ internal static class Program
     private static void Comparisons()
     {
         var b = Book("comparison-book"); Store.Apply(b.Folder, Demo.Request(b.Id, "A", 100)); Store.Apply(b.Folder, Demo.Request(b.Id, "B", 200)); var snapshot = Store.Snapshot(b.Folder);
+        Test("report-distinguishes-books-at-same-sequence", () =>
+        {
+            List<JsonElement> reports = [];
+            foreach (string suffix in new[] { "one", "two" })
+            {
+                var owned = Book("report-identity-" + suffix); Store.Apply(owned.Folder, Demo.Request(owned.Id, "SAME", 100));
+                string input = Fresh("identity-" + suffix + ".json"), output = Fresh("identity-report-" + suffix); File.WriteAllText(input, StatementJson(owned.Id, 1, new StatementRow("SAME", 100)));
+                Assert(Reconcile.Run(owned.Folder, input, output).Outcome == "pass"); using var d = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(output, "summary.json"))); var r = d.RootElement;
+                Assert(r.GetProperty("bookId").GetString() == owned.Id && r.GetProperty("statementSha256").GetString() == Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(input))).ToLowerInvariant());
+                reports.Add(r.Clone());
+            }
+            Assert(reports[0].GetProperty("bookId").GetString() != reports[1].GetProperty("bookId").GetString());
+            Assert(reports[0].GetProperty("snapshotReceiptListSha256").GetString() != reports[1].GetProperty("snapshotReceiptListSha256").GetString());
+        });
+        Test("report-exact-statement-bytes-vs-canonical-snapshot", () =>
+        {
+            string input = Fresh("byte-bound-statement.json"), json = StatementJson(b.Id, 2, new("A", 100), new("B", 200)); List<JsonElement> reports = [];
+            foreach (int i in new[] { 0, 1 })
+            {
+                File.WriteAllText(input, i == 0 ? json : " \n" + json + "\n"); string output = Fresh("byte-bound-report-" + i);
+                Reconcile.Run(b.Folder, input, output); using var d = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(output, "summary.json"))); reports.Add(d.RootElement.Clone());
+            }
+            Assert(reports[0].GetProperty("statementSha256").GetString() != reports[1].GetProperty("statementSha256").GetString());
+            Assert(reports[0].GetProperty("snapshotReceiptListSha256").GetString() == reports[1].GetProperty("snapshotReceiptListSha256").GetString());
+            string list = LiteralSnapshotFrame(snapshot);
+            Assert(reports[0].GetProperty("snapshotReceiptListSha256").GetString() == Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Bytes(list))).ToLowerInvariant());
+            Assert(reports[0].GetProperty("snapshotDigestSchema").GetString() == "synthetic-ledger-snapshot-v1");
+        });
         Test("comparison-match-limits-visible", () => { var r = Reconcile.Compare(snapshot, new(b.Id, "LAB", 2, 2, [new("B", 200), new("A", 100)])); Assert(r.Outcome == "pass" && r.Provenance == "UNVERIFIED" && r.Freshness == "NOT_CHECKED" && r.ExternalCompleteness == "NOT_PROVEN"); });
         Test("comparison-exact-error-counts", () => { var r = Reconcile.Compare(snapshot, new(b.Id, "LAB", 2, 2, [new("A", 99), new("X", 1), new("X", 2), new("A", 98)])); Assert(r.Complete && r.Outcome == "fail" && r.Duplicates == 2 && r.Unexpected == 2 && r.WrongAmount == 2 && r.Missing == 1); });
         Test("comparison-bounded-examples-exact-totals", () => { var r = Reconcile.Compare(snapshot, new(b.Id, "LAB", 2, 2, Enumerable.Range(0, 1000).Select(_ => new StatementRow("X", 1)).ToArray())); Assert(r.Duplicates == 999 && r.Unexpected == 1000 && r.Missing == 2 && r.DiagnosticCodes.Length == 20); });
-        Test("comparison-book-unit-scope", () => { var r = Reconcile.Compare(snapshot, new(new string('a', 32), "USD", 3, 1, [])); Assert(r.BookMismatch && r.UnitMismatch && r.ScopeMismatch && r.Outcome == "fail"); });
+        Test("comparison-book-unit-scope", () =>
+        {
+            var r = Reconcile.Compare(snapshot, new(new string('a', 32), "USD", 3, 1, [])); Assert(r.BookMismatch && r.UnitMismatch && r.ScopeMismatch && r.Outcome == "fail");
+            string input = Fresh("mismatched-book-statement.json"), output = Fresh("mismatched-book-report"); File.WriteAllText(input, StatementJson(new string('a', 32), 2, new("A", 100), new("B", 200)));
+            Assert(Reconcile.Run(b.Folder, input, output).Outcome == "fail"); using var doc = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(output, "summary.json")));
+            Assert(doc.RootElement.GetProperty("bookId").GetString() == b.Id && doc.RootElement.GetProperty("declaredBookId").GetString() == new string('a', 32));
+        });
         Test("statement-duplicates-preserved", () => { var s = Statement.Parse(Bytes(StatementJson(b.Id, 2, new("A", 100), new("A", 100)))); Assert(s.Rows.Length == 2 && Reconcile.Compare(snapshot, s).Duplicates == 1); });
         Test("statement-duplicate-key-file-fatal", () => Problem(() => Statement.Parse(Bytes(StatementJson(b.Id, 2).Insert(1, "\"unit\":\"LAB\","))), "JSON_DUPLICATE_KEY"));
         Test("statement-nested-duplicate-key", () => Problem(() => Statement.Parse(Bytes(StatementJson(b.Id, 2, new StatementRow("A", 100)).Replace("\"amountMinor\":100", "\"amountMinor\":100,\"amountMinor\":100", StringComparison.Ordinal))), "JSON_DUPLICATE_KEY"));
@@ -247,6 +283,10 @@ internal static class Program
             string input = Fresh("snapshot-statement.json"); File.WriteAllText(input, StatementJson(b.Id, 2, new("A", 100), new("B", 200)));
             Reconcile.SnapshotForTests = () => Store.Apply(b.Folder, Demo.Request(b.Id, "LATER", 1));
             var r = Reconcile.Run(b.Folder, input, Fresh("snapshot-report")); Assert(r.Outcome == "pass" && r.SnapshotSequence == 2 && Store.Snapshot(b.Folder).LastSequence == 3);
+            using var report = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(Fresh("snapshot-report"), "summary.json")));
+            string list = LiteralSnapshotFrame(snapshot);
+            Assert(report.RootElement.GetProperty("snapshotReceiptListSha256").GetString() == Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Bytes(list))).ToLowerInvariant());
+            Assert(report.RootElement.GetProperty("bookId").GetString() == snapshot.BookId && report.RootElement.GetProperty("result").GetProperty("snapshotSequence").GetInt32() == 2);
         });
     }
     private static void FilesAndCli()
@@ -275,7 +315,7 @@ internal static class Program
             var b = Book("cli-rejection"); string p = Fresh("invalid-post.json"); File.WriteAllText(p, Demo.Request(b.Id, "R").Canonical.Replace("\"credit\":12345", "\"credit\":1", StringComparison.Ordinal));
             Assert(Cli("post", b.Folder, p).Exit == 2); File.WriteAllText(p, "{"); Assert(Cli("post", b.Folder, p).Exit == 1);
         });
-        Test("cli-no-raw-input-or-private-path", () => { var r = Cli("post", Fresh("PRIVATE_SECRET_FOLDER"), Fresh("PRIVATE_SECRET_INPUT")); Assert(r.Exit == 1 && !r.Output.ToString().Contains("PRIVATE_SECRET", StringComparison.Ordinal)); });
+        Test("cli-no-raw-input-or-private-path", () => { var r = Cli("post", Fresh("PRIVATE_SECRET_FOLDER"), Fresh("PRIVATE_SECRET_INPUT")); Assert(r.Exit == 1 && !r.Output.ToString().Contains("PRIVATE_SECRET", StringComparison.Ordinal) && r.Output.GetProperty("schema").GetString() == "synthetic-ledger-error-v1" && r.Output.GetProperty("version").GetString() == Contract.Version && r.Output.GetProperty("toolBuild").GetString()!.Length > 0); });
         Test("cli-no-fault-or-sql-surface", () => { foreach (string arg in new[] { "--test-worker", "--sql", "--host", "--reset", "--plugin", "--crash", "--config" }) Assert(Cli(arg).Exit == 1); });
         Test("cli-version", () =>
         {

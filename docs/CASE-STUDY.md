@@ -28,6 +28,11 @@ sequence. Duplicate rows remain counted, with exact missing/unexpected/duplicate
 amount totals and bounded generic diagnostics. Invalid JSON is file-fatal; report
 write failure is incomplete. Agreement with a synthetic statement leaves provenance
 UNVERIFIED, freshness NOT_CHECKED and external completeness NOT_PROVEN.
+The report names the audited book and hashes the exact statement bytes and ordered
+snapshot receipt list. Different books at the same sequence remain distinguishable;
+input whitespace changes the raw-input hash while the same audited snapshot hash
+stays stable. A concurrent later append cannot enter the captured snapshot digest.
+Those hashes bind observations, not authenticity or source/use rights.
 
 Existing baselines: [TigerBeetle data modeling](https://docs.tigerbeetle.com/coding/data-modeling/)
 and [reliable submission](https://docs.tigerbeetle.com/coding/reliable-transaction-submission/),

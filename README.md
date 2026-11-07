@@ -92,6 +92,9 @@ The declared `throughSequence` must equal the audited snapshot's last sequence.
 Agreement leaves provenance **UNVERIFIED**, freshness **NOT_CHECKED**, and external
 completeness **NOT_PROVEN**. No source authenticity, use-rights or accounting
 certification is inferred. Reports include debit-minus-credit toy balances only.
+Standalone comparison JSON identifies the audited book, snapshot sequence, SHA256
+of the exact statement bytes, and SHA256 of the ordered sequence/receipt-hash list.
+These bind the observed inputs/snapshot, without authenticating their origin.
 
 Exit0: completed accepted operation or matching comparison. Exit2: completed
 rejection/comparison failure. Exit1: incomplete, unsupported, malformed, I/O,

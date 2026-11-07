@@ -19,15 +19,19 @@ def main():
  def run(name,args,code):
   r=subprocess.run([str(exe),*map(str,args)],cwd=work,env=env,text=True,encoding='utf-8',capture_output=True,timeout=30)
   (work/(name+'.json')).write_text(json.dumps({'exit':r.returncode,'stdout':r.stdout,'stderr':r.stderr,'command':[str(exe),*map(str,args)]},indent=2)+'\n',encoding='utf-8')
-  assert r.returncode==code and not r.stderr,(name,r.returncode);checks.append(name);return r.stdout
+  assert r.returncode==code and not r.stderr,(name,r.returncode)
+  if name!='version':
+   decoded=json.loads(r.stdout);assert decoded['schema'].startswith('synthetic-') and decoded['version']==m['version'] and a.commit in decoded['toolBuild']
+  checks.append(name);return r.stdout
  assert m['version'] in run('version',['--version'],0)
  demo=work/'demo with spaces';r=json.loads(run('demo',['demo',demo],0));assert r['complete'] and r['outcome']=='pass' and a.commit in r['toolBuild'] and r['entries']==2 and r['preciseAmountMinor']==123456789012
  assert r['posted']['receipt']==r['replayed']['receipt'] and r['rejectedConflict'] and r['rejectedUnbalanced'] and r['negative']['outcome']=='fail'
  assert sum(r['balancesDebitMinusCredit'].values())==0 and json.loads((demo/'report/summary.json').read_text(encoding='utf-8'))==r
- retry=json.loads(run('exact-retry',['post',demo/'book',demo/'post.json'],0))['result'];assert retry['disposition']=='replayed' and retry['receipt']==r['posted']['receipt'] and retry['receiptSha256']==r['posted']['receiptSha256']
+ retryOuter=json.loads(run('exact-retry',['post',demo/'book',demo/'post.json'],0));assert a.commit in retryOuter['toolBuild'] and retryOuter['version']==m['version'];retry=retryOuter['result'];assert retry['disposition']=='replayed' and retry['receipt']==r['posted']['receipt'] and retry['receiptSha256']==r['posted']['receiptSha256']
  match=json.loads(run('matching-comparison',['reconcile',demo/'book',demo/'statement-match.json',work/'matching report'],0))['result'];assert match['outcome']=='pass' and match['snapshotSequence']==2 and match['provenance']=='UNVERIFIED' and match['freshness']=='NOT_CHECKED' and match['externalCompleteness']=='NOT_PROVEN'
+ evidence=json.loads((work/'matching report/summary.json').read_text(encoding='utf-8'));assert evidence['bookId']==evidence['declaredBookId']==r['bookId'] and evidence['statementSha256']==sha(demo/'statement-match.json') and evidence['snapshotDigestSchema']=='synthetic-ledger-snapshot-v1' and len(evidence['snapshotReceiptListSha256'])==64 and a.commit in evidence['toolBuild']
  negative=json.loads(run('negative-comparison',['reconcile',demo/'book',demo/'statement-negative.json',work/'negative report'],2))['result'];assert [negative[k] for k in ['missing','unexpected','duplicates','wrongAmount']]==[1,2,1,1]
- book=work/'new book';created=json.loads(run('init',['init',book],0));assert created['complete'] and created['unit']=='LAB'
+ book=work/'new book';created=json.loads(run('init',['init',book],0));assert created['complete'] and created['unit']=='LAB' and a.commit in created['toolBuild'] and created['version']==m['version']
  post=json.loads((demo/'post.json').read_text(encoding='utf-8'));post['bookId']=created['bookId'];input=work/'post-new.json';input.write_text(json.dumps(post),encoding='utf-8');assert json.loads(run('new-post',['post',book,input],0))['result']['disposition']=='posted'
  post=json.loads((demo/'post.json').read_text(encoding='utf-8'))
  for split in post['splits']:
