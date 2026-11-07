@@ -58,6 +58,8 @@ The book remains local; nothing is sent over a network.
 These process tests are **not power-loss durability or distributed exactly-once
 proof**. Application append-only guards are not authenticated or tamper-proof
 history: a file owner can replace a book with another self-consistent book.
+Test IPC limits the phase line and caps stderr at4KiB; the real oversized-child
+case `owned-process-stderr-byte-budget` verifies rejection before acceptance.
 
 ## Small, explicit contract
 

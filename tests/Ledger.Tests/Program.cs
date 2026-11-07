@@ -59,11 +59,26 @@ internal static class Program
         if (!p.HasExited) p.Kill(entireProcessTree: true);
         Assert(p.WaitForExit(5000), "OWNED_CHILD_EXIT_TIMEOUT");
     }
+    private static byte[] BoundedError(Process p)
+    {
+        async Task<byte[]> Read()
+        {
+            using var stored = new MemoryStream(); byte[] buffer = new byte[512]; int count;
+            while ((count = await p.StandardError.BaseStream.ReadAsync(buffer)) > 0)
+            {
+                if (stored.Length + count > 4096) throw new InvalidDataException("TEST_CHILD_STDERR_LIMIT");
+                stored.Write(buffer, 0, count);
+            }
+            return stored.ToArray();
+        }
+        return Read().WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+    }
     private static int Worker(string[] args)
     {
         if (args is not ["--test-worker", var folder, var id, var amountText, var phase]) return 90;
-        string nonce = Safe.Owned(folder); if (Environment.GetEnvironmentVariable("LEDGER_TEST_TOKEN") != nonce || phase is not ("none" or "before-commit" or "after-commit-before-response")) return 91;
+        string nonce = Safe.Owned(folder); if (Environment.GetEnvironmentVariable("LEDGER_TEST_TOKEN") != nonce || phase is not ("none" or "before-commit" or "after-commit-before-response" or "stderr-overflow")) return 91;
         if (!long.TryParse(amountText, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out long amount)) return 92;
+        if (phase == "stderr-overflow") { Console.OpenStandardError().Write(new byte[4097]); return 0; }
         if (phase != "none") Store.PhaseForTests = observed =>
         {
             if (observed != phase) return;
@@ -282,6 +297,17 @@ internal static class Program
     }
     private static void Processes()
     {
+        Test("owned-process-stderr-byte-budget", () =>
+        {
+            var b = Book("stderr-budget"); using var child = Child(b.Folder, "NO_POST", 1, "stderr-overflow");
+            try
+            {
+                try { BoundedError(child); throw new Exception("EXPECTED_STDERR_BUDGET_FAILURE"); }
+                catch (InvalidDataException e) { Assert(e.Message == "TEST_CHILD_STDERR_LIMIT"); }
+                Assert(child.WaitForExit(5000) && child.ExitCode == 0 && Store.Snapshot(b.Folder).LastSequence == 0);
+            }
+            finally { KillOwned(child); }
+        });
         foreach (string phase in new[] { "before-commit", "after-commit-before-response" })
             Test("owned-process-" + phase, () =>
             {
@@ -290,7 +316,7 @@ internal static class Program
                 {
                     using var d = JsonDocument.Parse(BoundedLine(child)); var r = d.RootElement; Contract.Fields(r, "schema", "nonce", "phase", "pid");
                     Assert(r.GetProperty("schema").GetString() == "ledger-test-phase-v1" && r.GetProperty("nonce").GetString() == b.Id && r.GetProperty("phase").GetString() == phase && r.GetProperty("pid").GetInt32() == child.Id);
-                    KillOwned(child); Assert(child.StandardError.ReadToEnd().Length == 0);
+                    KillOwned(child); Assert(BoundedError(child).Length == 0);
                     var snapshot = Store.Snapshot(b.Folder); int count = phase == "before-commit" ? 0 : 1; Assert(snapshot.LastSequence == count);
                     var retry = Store.Apply(b.Folder, Demo.Request(b.Id, "INTERRUPTED", 71));
                     Assert(retry.Disposition == (count == 0 ? "posted" : "replayed") && Store.Snapshot(b.Folder).LastSequence == 1);
@@ -305,7 +331,7 @@ internal static class Program
                 try
                 {
                     string one = BoundedLine(first), two = BoundedLine(second); Assert(first.WaitForExit(15000) && second.WaitForExit(15000));
-                    Assert(first.StandardError.ReadToEnd().Length == 0 && second.StandardError.ReadToEnd().Length == 0);
+                    Assert(BoundedError(first).Length == 0 && BoundedError(second).Length == 0);
                     int[] codes = [first.ExitCode, second.ExitCode]; Array.Sort(codes); Assert(codes.SequenceEqual(conflict ? new[] { 0, 2 } : new[] { 0, 0 }));
                     Assert(Store.Snapshot(b.Folder).LastSequence == 1);
                     if (!conflict) { using var a = JsonDocument.Parse(one); using var z = JsonDocument.Parse(two); Assert(a.RootElement.GetProperty("receipt").GetString() == z.RootElement.GetProperty("receipt").GetString()); }
