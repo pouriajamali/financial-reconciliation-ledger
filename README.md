@@ -127,3 +127,5 @@ private work; never submit them here. No private/shared/employer project code,
 tests, schemas, contracts or ideas were transferred. Existing MIT grants remain
 unchanged; making a repository private cannot retract previously published copies.
 No customer demand, sales, revenue, exclusive authorship or independent-skill claim.
+
+[CI resource policy](docs/CI-POLICY.md): documentation-only changes get real lightweight document/pipeline checks; source, tag and manual runs retain native validation. Published runtime tags and release assets remain unchanged.
