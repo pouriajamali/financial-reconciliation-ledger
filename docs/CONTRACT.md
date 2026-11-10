@@ -90,3 +90,65 @@ Public MIT reusable synthetic sample; customer-specific code/data/config/deploym
 secrets and unreleased commercial additions remain separate private work. No transfer
 of shared/private/employer source, tests, data, schemas, contracts or ideas. Existing
 MIT/upstream grants remain intact; checksum signing does not prohibit licensed reuse.
+
+## Standalone discrepancy sidecar v1 (source candidate 0.1.0-preview.2)
+
+Standalone `reconcile` adds `discrepancies.json`; the existing `summary.json`,
+`summary.txt`, stdout, exit semantics and all saved post/receipt bytes retain their
+existing formats. `demo` does not add this sidecar. A synthetic capture fixture
+uses debit cash / credit clearing and a separate synthetic statement; the amount
+is the post's total debit, never a real payment, balance or net settlement.
+
+The UTF-8/no-BOM sidecar ends with one LF. Its fields, in fixed order, are:
+`schema` (`synthetic-reconciliation-discrepancies-v1`), `summarySha256`, `bookId`,
+`statementSha256`, `snapshotReceiptListSha256`, `throughSequence`, `issues`.
+`summarySha256` hashes the exact summary.json bytes, including its final LF.
+Other identities bind the same already-read statement and single audited snapshot
+as the summary. No new timestamp, invocation ID or output path is serialized.
+
+Each issue has these fields in this exact order, including explicit nulls:
+`code`, `requestId`, `statementRowIndex`, `entrySequence`, `expectedAmountMinor`,
+`actualAmountMinor`, `firstStatementRowIndex`. The row index is 1-based in `rows`,
+not a text line number. Entry sequence/expected amount refer to an audited post;
+they are null for an unknown ID. Actual amount/row index are null for a missing ID.
+Only duplicates have a nonnull firstStatementRowIndex. All amounts remain exact
+integer minor units, including zero actual amounts and values above Int32 range.
+
+| Code | One issue for each |
+|---|---|
+| DUPLICATE_REQUEST_ID | Occurrence after the first, pointing to its first row |
+| UNEXPECTED_REQUEST_ID | Row whose ID is absent from the snapshot |
+| WRONG_AMOUNT | Known-ID row with an unequal amount |
+| MISSING_REQUEST_ID | Snapshot post with no statement row of that ID |
+
+Categories overlap: an unknown duplicate is both duplicate and unexpected; a
+known duplicate may also have a wrong amount. A known wrong amount is not missing.
+IDs use ordinal case-sensitive equality without trimming. Rows appear in statement
+order, duplicate first and then unexpected/wrong amount; missing posts follow in
+ascending entry sequence. Each code's cardinality equals its existing independent
+summary count. All issues are present: at most4000 and2MiB serialized UTF-8 bytes,
+including the final LF. Exceeding either guard is incomplete, never truncation.
+The existing20 generic diagnostic examples remain separate and unchanged.
+
+Book/unit-or-scale/snapshot-scope mismatches remain summary flags, not row issues.
+An empty issues array does not imply pass if a flag fails. For a fixed build, exact
+input bytes and unchanged book, reports in fresh output folders are byte-identical.
+Whitespace changes the statement hash and summary binding, even if issues agree.
+A newly initialized book or changed build is not covered by that byte identity.
+
+All three pending files use CreateNew. Discrepancies are finalized first, text
+second and summary.json last. Both a valid summary and its hash-bound sidecar are
+required for the new standalone report contract. A collision, ownership change,
+cap or write/rename failure exits1 without successful completion. Owned pending or
+orphan sidecar files may remain; no output is overwritten or automatically cleaned.
+Use a fresh folder to retry. This is not power-loss-atomic publication or a hostile
+filesystem/race sandbox. Readers must check the summary outcome, counts and flags.
+
+Comparison adds no posts/replays or journal/split/receipt writes. Clean, quiescent
+book file inventory and hashes are checked before/after pass, fail and report
+failure. The existing ReadWrite SQLite open may perform normal hot-journal
+recovery; physical immutability for every interrupted/crashed state is not claimed.
+Only synthetic IDs/amounts belong in these detail files. No new import format,
+real currency/account/API, fuzzy matching, fee/refund/partial-settlement workflow
+or human case queue is provided. Provenance UNVERIFIED, freshness NOT_CHECKED and
+external completeness NOT_PROVEN remain unchanged.

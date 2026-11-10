@@ -12,7 +12,7 @@ internal sealed class Problem(string code, bool rejected = false) : Exception(co
 
 internal static partial class Contract
 {
-    public const string Version = "0.1.0-preview.1", Profile = "synthetic-ledger-v1";
+    public const string Version = "0.1.0-preview.2", Profile = "synthetic-ledger-v1";
     public const int Capacity = 1000, InputLimit = 1024 * 1024;
     public const long AmountLimit = 1_000_000_000_000;
     public static readonly string[] Accounts = ["cash", "clearing", "fees"];

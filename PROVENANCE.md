@@ -12,6 +12,16 @@ a previously trusted checkout before accepting a new download. A key and a
 fingerprint obtained together from the same untrusted release are not independent
 identity proof. The key is public; never share or request the private signing key.
 
+## Local M1 candidate boundary
+
+Source0.1.0-preview.2 is currently a local review candidate, not a published tag or
+download. It uses SDK10.0.404/runtime and provider10.0.15. Candidate commit signature
+verification is separate from archive publication, checksum signing, hosted CI and
+matching-OS Linux execution. The examples below intentionally continue to verify
+the immutable published0.1.0-preview.1 artifacts; do not change their checksums,
+signatures or source identity. Future0.1.0-preview.2 publication requires a separate
+approval, matching-OS archive evidence and the complete signing/download checks.
+
 ## What is signed
 
 The example below verifies **v0.1.0-preview.1**. Its

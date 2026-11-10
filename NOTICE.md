@@ -11,7 +11,7 @@ Double-entry bookkeeping, ID-based deduplication and atomic transactions are
 established public patterns. TigerBeetle and SQLite are referenced as existing
 baselines, with no endorsement, competitive benchmark or new-ledger invention claim.
 
-Microsoft.Data.Sqlite10.0.14 and .NET runtime10.0.14 retain MIT/third-party notices.
+Microsoft.Data.Sqlite10.0.15 and .NET runtime10.0.15 retain MIT/third-party notices.
 SQLitePCLRaw2.1.13 retains Apache-2.0/package notices; SQLite core is public domain.
 Bundled `licenses/` and `DEPENDENCIES.json` retain exact package identities, NuGet
 content hashes and license/copyright notices. Original MIT does not replace any

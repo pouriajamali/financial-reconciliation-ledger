@@ -5,6 +5,25 @@ receipts and offline statement comparison. **No real money or account connection
 The useful result is the engineering decision and its evidence: what is rejected,
 what survives a controlled process interruption, and which test demonstrates it.
 
+## Local source candidate: 0.1.0-preview.2
+
+This branch adds complete per-row discrepancy details to standalone `reconcile`.
+It is a local review candidate, with no published0.1.0-preview.2 download or new
+Linux execution/CI claim yet. The ready download below is the immutable older
+preview and does not contain the new sidecar. Build the current source to review it.
+
+`discrepancies.json` identifies each missing/unexpected/duplicate/wrong-amount issue
+by synthetic request ID,1-based statement row, audited sequence and expected/actual
+integer amounts. Categories overlap; details are never silently truncated. It is
+bound to the exact summary bytes and the same single snapshot. Check the summary's
+outcome and scope flags too: empty details do not override a mismatched book/scope.
+See the [sidecar contract](docs/CONTRACT.md) and
+[candidate notes](docs/RELEASE-v0.1.0-preview.2.md).
+
+Both summary formats, exit codes, strict input JSON, LAB/scale2 accounts and saved
+receipts remain compatible. Only standalone comparison adds the file; `demo` keeps
+its existing output. No posting/settlement action or human case queue is added.
+
 ## Try the ready package
 
 [Preview v0.1.0-preview.1 and downloads](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.1)
@@ -87,6 +106,11 @@ plus bounded sidecars;20 generic diagnostic examples plus exact totals. Observed
 links, network paths, controls and nonregular inputs are refused. These checks are
 bounded application safeguards, not a hostile-file/native-memory/filesystem sandbox.
 
+Comparison creates no new journal posts. Clean, quiescent book files are checked
+for unchanged hashes/inventory; normal SQLite hot-journal recovery remains allowed,
+so this is not physical read-only access for every crashed state. Sidecar publication
+can leave pending/orphan files after failure; retry into a fresh output directory.
+
 Statement amounts are **total debit minor units per request**, not net balances.
 The declared `throughSequence` must equal the audited snapshot's last sequence.
 Agreement leaves provenance **UNVERIFIED**, freshness **NOT_CHECKED**, and external
@@ -102,15 +126,21 @@ timeout or report failure. A missing report after response loss is not success.
 
 ## Build and reproduce
 
-Requires .NET SDK10.0.403 and Python3.12 for packaging. Dependencies are locked:
-Microsoft.Data.Sqlite10.0.14, SQLitePCLRaw2.1.13 and resolved transitive packages;
-runtime10.0.14. CI uses matching Windows/Ubuntu builds, tests actual extracted
+Requires .NET SDK10.0.404 and Python3.12 for packaging. Dependencies are locked:
+Microsoft.Data.Sqlite10.0.15, SQLitePCLRaw2.1.13 and resolved transitive packages;
+runtime10.0.15. CI uses matching Windows/Ubuntu builds, tests actual extracted
 archives and aggregates those same archives without rebuilding them.
 
 ```sh
 dotnet restore tests/Ledger.Tests --locked-mode
 dotnet run --project tests/Ledger.Tests -c Release --no-restore -- --work artifacts/tests-new
 ```
+
+M1 regressions include literal seven-issue and2001-issue cases, ordinal IDs,
+Int64 values, independent summary/sidecar hashes, same-build byte replay, one-snapshot
+later-append behavior, quiescent no-post checks and each pending-write/final-rename
+ownership/collision/failure boundary. Cap rejection is tested directly with deliberately
+over-limit internal values; valid bounded inputs cannot reach those guards today.
 
 Tests create fresh synthetic books. Interruption/concurrency workers belong only
 to the test assembly and are excluded from distributables. OS-specific skips are
@@ -130,8 +160,12 @@ No customer demand, sales, revenue, exclusive authorship or independent-skill cl
 
 [CI resource policy](docs/CI-POLICY.md): documentation-only changes get real lightweight document/pipeline checks; source, tag and manual runs retain native validation. Published runtime tags and release assets remain unchanged.
 
-## Source readability
+## Source and published runtime
 
-The current source expands compact C# layout for review. The published preview links identify its frozen runtime release. Formatting preserves complete syntax, token text and values, comments and directives; it does not introduce a runtime behavior or performance claim.
+The earlier readability baseline preserved syntax/token values. This branch adds
+the discrepancy sidecar and approved servicing: SDK10.0.404, runtime/provider10.0.15,
+with SQLitePCLRaw2.1.13 retained. These are current-source requirements; frozen
+v0.1.0-preview.1 packages retain their original10.0.14 runtime/provider and SDK10.0.403
+reproduction baseline. The old download links intentionally continue to name them.
 
 To reproduce a published package, use its exact original runtime source: [v0.1.0-preview.1 source](https://github.com/pouriajamali/financial-reconciliation-ledger/tree/f137244914e8b392fffab386756fa12eb43f00f1) (`f137244914e8b392fffab386756fa12eb43f00f1`). Later `main` layout is reviewed separately from those frozen release commits.

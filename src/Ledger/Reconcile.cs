@@ -72,7 +72,7 @@ internal static class Reconcile
         SnapshotForTests?.Invoke(); // A later append is outside the named snapshot.
         string snapshotReceiptListSha256 = Contract.Hash(Contract.Serialize(new { schema = DigestSchema, bookId = book.BookId, throughSequence = book.LastSequence, receipts = book.Entries.Select(e => new { sequence = e.Sequence, receiptSha256 = e.ReceiptSha256 }).ToArray() }));
         var result = Compare(book, statement);
-        Report.Write(output, new { schema = "synthetic-reconciliation-report-v1", version = Contract.Version, toolBuild = Report.Build, bookId = book.BookId, declaredBookId = statement.BookId, statementSha256 = Contract.Hash(statementBytes), snapshotDigestSchema = DigestSchema, snapshotReceiptListSha256, result, limits = Report.Limits });
+        Report.Write(output, new { schema = "synthetic-reconciliation-report-v1", version = Contract.Version, toolBuild = Report.Build, bookId = book.BookId, declaredBookId = statement.BookId, statementSha256 = Contract.Hash(statementBytes), snapshotDigestSchema = DigestSchema, snapshotReceiptListSha256, result, limits = Report.Limits }, summary => Discrepancies.Serialize(summary, book, Contract.Hash(statementBytes), snapshotReceiptListSha256, Discrepancies.Create(book, statement)));
         return result;
     }
 }
@@ -80,10 +80,11 @@ internal static class Reconcile
 internal static class Report
 {
     internal static Action<string>? BeforeWriteForTests = null;
+    internal static Action<string, string>? BeforeFileForTests = null;
     public static string Build => System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(typeof(Report).Assembly)?.InformationalVersion ?? "UNAVAILABLE";
 
     public const string Limits = "Synthetic LAB scale2 journal only. Agreement is not authenticity, rights, freshness, external completeness or certified accounting. Process interruption is not power-loss or distributed exactly-once proof. Existing native hosts; not a hostile-file/filesystem sandbox.";
-    public static void Write<T>(string output, T report)
+    public static void Write<T>(string output, T report, Func<byte[], byte[]>? makeDiscrepancies = null)
     {
         output = Safe.Normalize(output);
         string nonce = Guid.NewGuid().ToString("N");
@@ -93,13 +94,33 @@ internal static class Report
         using var document = Contract.Document(bytes);
         var value = document.RootElement;
         string outcome = value.TryGetProperty("outcome", out var top) ? top.GetString()! : value.GetProperty("result").GetProperty("outcome").GetString()!;
-        if (Safe.Owned(output) != nonce)
-            throw new Problem("OWNERSHIP_CHANGED");
-        Safe.WriteNew(Path.Combine(output, "summary.txt.pending"), Encoding.UTF8.GetBytes("Financial Reconciliation Ledger: " + outcome + "\nVersion " + Contract.Version + "; synthetic LAB scale2 only.\nProvenance UNVERIFIED; freshness NOT_CHECKED; external completeness NOT_PROVEN.\nSee summary.json for exact counts and receipt disposition.\n" + Limits + "\n"));
-        Safe.WriteNew(Path.Combine(output, "summary.json.pending"), bytes);
-        if (Safe.Owned(output) != nonce)
-            throw new Problem("OWNERSHIP_CHANGED");
-        File.Move(Path.Combine(output, "summary.txt.pending"), Path.Combine(output, "summary.txt"));
-        File.Move(Path.Combine(output, "summary.json.pending"), Path.Combine(output, "summary.json"));
+        byte[]? discrepancies = makeDiscrepancies?.Invoke(bytes);
+        void CheckOwnership()
+        {
+            if (Safe.Owned(output) != nonce)
+                throw new Problem("OWNERSHIP_CHANGED");
+        }
+        void WritePending(string name, byte[] content)
+        {
+            BeforeFileForTests?.Invoke(output, "write:" + name);
+            CheckOwnership();
+            Safe.WriteNew(Path.Combine(output, name + ".pending"), content);
+            CheckOwnership();
+        }
+        void Publish(string name)
+        {
+            BeforeFileForTests?.Invoke(output, "rename:" + name);
+            CheckOwnership();
+            File.Move(Path.Combine(output, name + ".pending"), Path.Combine(output, name));
+            CheckOwnership();
+        }
+        if (discrepancies != null)
+            WritePending("discrepancies.json", discrepancies);
+        WritePending("summary.txt", Encoding.UTF8.GetBytes("Financial Reconciliation Ledger: " + outcome + "\nVersion " + Contract.Version + "; synthetic LAB scale2 only.\nProvenance UNVERIFIED; freshness NOT_CHECKED; external completeness NOT_PROVEN.\nSee summary.json for exact counts and receipt disposition.\n" + Limits + "\n"));
+        WritePending("summary.json", bytes);
+        if (discrepancies != null)
+            Publish("discrepancies.json");
+        Publish("summary.txt");
+        Publish("summary.json"); // Completion marker is always last; failures leave owned evidence. Issue totals never turn I/O failures green.
     }
 }

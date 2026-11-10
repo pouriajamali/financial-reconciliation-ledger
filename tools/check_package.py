@@ -12,9 +12,10 @@ def main():
   file=package/f['path'];assert not file.is_symlink() and file.stat().st_size==f['bytes'] and sha(file)==f['sha256']
  assert a.commit.encode() in (package/'ledger.dll').read_bytes()
  for name in ['LICENSE','NOTICE.md','CONTRIBUTING.md','PROVENANCE.md','docs/CONTRACT.md','docs/CASE-STUDY.md','docs/ACCEPTED-CLARIFICATIONS.md']:assert (package/name).is_file()
- inventory=json.loads((package/'DEPENDENCIES.json').read_text(encoding='utf-8'))['packages'];assert any(d['id']=='Microsoft.Data.Sqlite' and d['version']=='10.0.14' for d in inventory)
+ inventory=json.loads((package/'DEPENDENCIES.json').read_text(encoding='utf-8'))['packages'];assert any(d['id']=='Microsoft.Data.Sqlite' and d['version']=='10.0.15' for d in inventory)
  assert any(f.name.startswith('Microsoft.NETCore.App.Runtime') and 'THIRD-PARTY-NOTICES' in f.name.upper() for f in (package/'licenses').iterdir())
  config=json.loads((package/'ledger.runtimeconfig.json').read_text(encoding='utf-8'))['runtimeOptions'];assert 'includedFrameworks' in config and 'frameworks' not in config
+ assert any(f['name']=='Microsoft.NETCore.App' and f['version']=='10.0.15' for f in config['includedFrameworks'])
  checks=['manifest-source-dependencies-licenses-document-links'];exe=package/('ledger.exe' if os.name=='nt' else 'ledger');env=dict(os.environ,DOTNET_ROOT=str(work/'no-installed-dotnet'),DOTNET_ROOT_X64=str(work/'no-installed-dotnet'),DOTNET_MULTILEVEL_LOOKUP='0')
  def run(name,args,code):
   r=subprocess.run([str(exe),*map(str,args)],cwd=work,env=env,text=True,encoding='utf-8',capture_output=True,timeout=30)
@@ -45,7 +46,32 @@ def main():
  existing=work/'existing';existing.mkdir();(existing/'sentinel').write_text('untouched',encoding='utf-8');assert json.loads(run('refuse-existing',['demo',existing],1))['reason']=='OUTPUT_EXISTS' and (existing/'sentinel').read_text(encoding='utf-8')=='untouched'
  for arg in ['--host','--sql','--test-worker']:assert json.loads(run('refuse-'+arg[2:],[arg],1))['reason']=='CLI_INVALID'
  assert json.loads(run('refuse-report-overlap',['reconcile',demo/'book',demo/'statement-match.json',demo/'book/illegal report'],1))['reason']=='OUTPUT_OVERLAPS_INPUT'
- assert len(checks)==16
+ assert not (demo/'report/discrepancies.json').exists(),'Legacy demo report is unchanged'
+ def details(folder):
+  summary=folder/'summary.json';detail=json.loads((folder/'discrepancies.json').read_text(encoding='utf-8'));s=json.loads(summary.read_text(encoding='utf-8'))
+  assert list(detail)==['schema','summarySha256','bookId','statementSha256','snapshotReceiptListSha256','throughSequence','issues']
+  assert detail['schema']=='synthetic-reconciliation-discrepancies-v1' and detail['summarySha256']==sha(summary)
+  assert all(detail[k]==s[k] for k in ['bookId','statementSha256','snapshotReceiptListSha256']) and detail['throughSequence']==s['result']['snapshotSequence']
+  raw=(folder/'discrepancies.json').read_bytes();assert raw.endswith(b'\n') and not raw.startswith(b'\xef\xbb\xbf') and len(raw)<=2097152 and len(detail['issues'])<=4000
+  fields=['code','requestId','statementRowIndex','entrySequence','expectedAmountMinor','actualAmountMinor','firstStatementRowIndex']
+  assert all(list(i)==fields for i in detail['issues'])
+  for code,key in [('DUPLICATE_REQUEST_ID','duplicates'),('UNEXPECTED_REQUEST_ID','unexpected'),('WRONG_AMOUNT','wrongAmount'),('MISSING_REQUEST_ID','missing')]:assert sum(i['code']==code for i in detail['issues'])==s['result'][key]
+  return detail
+ assert details(work/'matching report')['issues']==[] and len(details(work/'negative report')['issues'])==5
+ checks.append('sidecar-binding-exact-counts-legacy-demo')
+ literal=work/'seven-issue.json';frame=json.loads((demo/'statement-match.json').read_text(encoding='utf-8'))
+ frame['rows']=[{'requestId':'DEMO_A','amountMinor':123456789011},{'requestId':'X','amountMinor':1},{'requestId':'X','amountMinor':2},{'requestId':'DEMO_A','amountMinor':123456789010}]
+ literal.write_text(json.dumps(frame),encoding='utf-8')
+ assert json.loads(run('literal-seven-issue-comparison',['reconcile',demo/'book',literal,work/'seven report'],2))['result']['wrongAmount']==2
+ expected=[('WRONG_AMOUNT','DEMO_A',1,1,123456789012,123456789011,None),('UNEXPECTED_REQUEST_ID','X',2,None,None,1,None),('DUPLICATE_REQUEST_ID','X',3,None,None,2,2),('UNEXPECTED_REQUEST_ID','X',3,None,None,2,None),('DUPLICATE_REQUEST_ID','DEMO_A',4,1,123456789012,123456789010,1),('WRONG_AMOUNT','DEMO_A',4,1,123456789012,123456789010,None),('MISSING_REQUEST_ID','DEMO_B',None,2,1000,None,None)]
+ assert [tuple(i.values()) for i in details(work/'seven report')['issues']]==expected
+ run('repeat-seven-issue-comparison',['reconcile',demo/'book',literal,work/'seven repeated report'],2)
+ for name in ['summary.json','summary.txt','discrepancies.json']:assert (work/'seven report'/name).read_bytes()==(work/'seven repeated report'/name).read_bytes()
+ checks.append('literal-seven-issues-and-byte-repeat')
+ frame['rows']=[{'requestId':'X','amountMinor':1} for _ in range(1000)];many=work/'2001-issues.json';many.write_text(json.dumps(frame),encoding='utf-8')
+ manyresult=json.loads(run('2001-issue-comparison',['reconcile',demo/'book',many,work/'2001 report'],2))['result'];assert [manyresult[k] for k in ['duplicates','unexpected','missing','wrongAmount']]==[999,1000,2,0] and len(details(work/'2001 report')['issues'])==2001
+ checks.append('full-2001-issues-no-truncation')
+ assert len(checks)==22
  receipt={'status':'ACTUAL_SELF_CONTAINED_SYNTHETIC_LEDGER_PACKAGE_PASS','commit':a.commit,'rid':m['rid'],'checkCount':len(checks),'checks':checks,'manifestSha256':sha(package/'BUILD-MANIFEST.json'),'scope':'Synthetic LAB journal/reconciliation only; existing hosts, no real finance/powerloss/distributedexactlyonce/cleanOS claim'}
  (work/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n',encoding='utf-8');print(json.dumps({'status':receipt['status'],'checks':len(checks),'rid':m['rid']}))
 if __name__=='__main__':main()

@@ -68,6 +68,7 @@ internal static class Program
             Store.PhaseForTests = null;
             Reconcile.SnapshotForTests = null;
             Report.BeforeWriteForTests = null;
+            Report.BeforeFileForTests = null;
         }
     }
 
@@ -214,11 +215,15 @@ internal static class Program
         Parsing();
         Journal();
         Comparisons();
+        DiscrepancyTests();
         FilesAndCli();
         Processes();
         var receipt = new
         {
             schema = "ledger-tests-v1",
+            runtimeVersion = Environment.Version.ToString(),
+            providerAssemblyVersion = typeof(SqliteConnection).Assembly.GetName().Version?.ToString(),
+            toolBuild = Report.Build,
             passed = Passed,
             failed = Failed,
             skipped = Skipped,
@@ -635,6 +640,273 @@ internal static class Program
             string list = LiteralSnapshotFrame(snapshot);
             Assert(report.RootElement.GetProperty("snapshotReceiptListSha256").GetString() == Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Bytes(list))).ToLowerInvariant());
             Assert(report.RootElement.GetProperty("bookId").GetString() == snapshot.BookId && report.RootElement.GetProperty("result").GetProperty("snapshotSequence").GetInt32() == 2);
+        });
+    }
+
+    private static JsonElement ReadJson(string path)
+    {
+        using var document = JsonDocument.Parse(File.ReadAllBytes(path));
+        return document.RootElement.Clone();
+    }
+
+    private static string IndependentHash(byte[] bytes) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).ToLowerInvariant();
+
+    private static string BookFingerprint(string folder) => string.Join("\n", Directory.GetFiles(folder).OrderBy(p => p, StringComparer.Ordinal).Select(p => Path.GetFileName(p) + ":" + IndependentHash(File.ReadAllBytes(p))));
+
+    private static void AssertDetailBinding(string output)
+    {
+        byte[] bytes = File.ReadAllBytes(Path.Combine(output, "discrepancies.json"));
+        Assert(bytes[^1] == 10 && !bytes.AsSpan().StartsWith(new byte[] { 0xef, 0xbb, 0xbf }) && bytes.Length <= 2 * 1024 * 1024);
+        var detail = ReadJson(Path.Combine(output, "discrepancies.json"));
+        var summary = ReadJson(Path.Combine(output, "summary.json"));
+        Assert(detail.EnumerateObject().Select(p => p.Name).SequenceEqual(new[] { "schema", "summarySha256", "bookId", "statementSha256", "snapshotReceiptListSha256", "throughSequence", "issues" }));
+        Assert(detail.GetProperty("schema").GetString() == "synthetic-reconciliation-discrepancies-v1");
+        Assert(detail.GetProperty("summarySha256").GetString() == IndependentHash(File.ReadAllBytes(Path.Combine(output, "summary.json"))));
+        foreach (string field in new[] { "bookId", "statementSha256", "snapshotReceiptListSha256" })
+            Assert(detail.GetProperty(field).GetString() == summary.GetProperty(field).GetString());
+        Assert(detail.GetProperty("throughSequence").GetInt32() == summary.GetProperty("result").GetProperty("snapshotSequence").GetInt32());
+        var issues = detail.GetProperty("issues").EnumerateArray().ToArray();
+        foreach (var issue in issues)
+            Assert(issue.EnumerateObject().Select(p => p.Name).SequenceEqual(new[] { "code", "requestId", "statementRowIndex", "entrySequence", "expectedAmountMinor", "actualAmountMinor", "firstStatementRowIndex" }));
+        foreach (var pair in new[] { ("DUPLICATE_REQUEST_ID", "duplicates"), ("UNEXPECTED_REQUEST_ID", "unexpected"), ("WRONG_AMOUNT", "wrongAmount"), ("MISSING_REQUEST_ID", "missing") })
+            Assert(issues.Count(i => i.GetProperty("code").GetString() == pair.Item1) == summary.GetProperty("result").GetProperty(pair.Item2).GetInt32());
+        Assert(issues.Length <= 4000);
+    }
+
+    private static void DiscrepancyTests()
+    {
+        var b = Book("m1-book");
+        Store.Apply(b.Folder, Demo.Request(b.Id, "A", 100));
+        Store.Apply(b.Folder, Demo.Request(b.Id, "B", 200));
+        string matching = StatementJson(b.Id, 2, new("B", 200), new("A", 100));
+        string negative = StatementJson(b.Id, 2, new("A", 99), new("X", 1), new("X", 2), new("A", 98));
+        (int Exit, JsonElement Output, string Folder) Compare(string label, string json)
+        {
+            string input = Fresh("m1-" + label + ".json"), output = Fresh("m1-" + label + "-report");
+            File.WriteAllText(input, json, new UTF8Encoding(false));
+            var result = Cli("reconcile", b.Folder, input, output);
+            if (File.Exists(Path.Combine(output, "summary.json")))
+                AssertDetailBinding(output);
+            return (result.Exit, result.Output, output);
+        }
+
+        Test("m1-ac01-match-and-empty", () =>
+        {
+            var r = Compare("match", matching);
+            Assert(r.Exit == 0 && ReadJson(Path.Combine(r.Folder, "discrepancies.json")).GetProperty("issues").GetArrayLength() == 0);
+            var empty = Book("m1-empty");
+            string input = Fresh("m1-empty.json"), output = Fresh("m1-empty-report");
+            File.WriteAllText(input, StatementJson(empty.Id, 0));
+            Assert(Cli("reconcile", empty.Folder, input, output).Exit == 0);
+            AssertDetailBinding(output);
+            Assert(ReadJson(Path.Combine(output, "discrepancies.json")).GetProperty("throughSequence").GetInt32() == 0);
+        });
+        Test("m1-ac02-literal-seven-issues", () =>
+        {
+            var r = Compare("negative", negative);
+            Assert(r.Exit == 2);
+            var result = r.Output.GetProperty("result");
+            Assert(result.GetProperty("missing").GetInt32() == 1 && result.GetProperty("unexpected").GetInt32() == 2 && result.GetProperty("duplicates").GetInt32() == 2 && result.GetProperty("wrongAmount").GetInt32() == 2);
+            const string expected = """
+            [{"code":"WRONG_AMOUNT","requestId":"A","statementRowIndex":1,"entrySequence":1,"expectedAmountMinor":100,"actualAmountMinor":99,"firstStatementRowIndex":null},{"code":"UNEXPECTED_REQUEST_ID","requestId":"X","statementRowIndex":2,"entrySequence":null,"expectedAmountMinor":null,"actualAmountMinor":1,"firstStatementRowIndex":null},{"code":"DUPLICATE_REQUEST_ID","requestId":"X","statementRowIndex":3,"entrySequence":null,"expectedAmountMinor":null,"actualAmountMinor":2,"firstStatementRowIndex":2},{"code":"UNEXPECTED_REQUEST_ID","requestId":"X","statementRowIndex":3,"entrySequence":null,"expectedAmountMinor":null,"actualAmountMinor":2,"firstStatementRowIndex":null},{"code":"DUPLICATE_REQUEST_ID","requestId":"A","statementRowIndex":4,"entrySequence":1,"expectedAmountMinor":100,"actualAmountMinor":98,"firstStatementRowIndex":1},{"code":"WRONG_AMOUNT","requestId":"A","statementRowIndex":4,"entrySequence":1,"expectedAmountMinor":100,"actualAmountMinor":98,"firstStatementRowIndex":null},{"code":"MISSING_REQUEST_ID","requestId":"B","statementRowIndex":null,"entrySequence":2,"expectedAmountMinor":200,"actualAmountMinor":null,"firstStatementRowIndex":null}]
+            """;
+            Assert(ReadJson(Path.Combine(r.Folder, "discrepancies.json")).GetProperty("issues").GetRawText() == expected, "LITERAL_SEVEN_ISSUES");
+        });
+        Test("m1-ac03-duplicate-overlap-case-and-int64", () =>
+        {
+            var known = Compare("duplicate-known", StatementJson(b.Id, 2, new("A", 100), new("A", 100), new("B", 200)));
+            Assert(known.Exit == 2 && ReadJson(Path.Combine(known.Folder, "discrepancies.json")).GetProperty("issues").GetArrayLength() == 1);
+            var unknown = Compare("duplicate-unknown", StatementJson(b.Id, 2, new("X", 1), new("X", 1)));
+            Assert(unknown.Exit == 2 && ReadJson(Path.Combine(unknown.Folder, "discrepancies.json")).GetProperty("issues").GetArrayLength() == 5);
+            var casing = Compare("case", StatementJson(b.Id, 2, new("a", 100), new("B", 200)));
+            Assert(casing.Exit == 2 && casing.Output.GetProperty("result").GetProperty("missing").GetInt32() == 1 && casing.Output.GetProperty("result").GetProperty("unexpected").GetInt32() == 1);
+            var edge = Compare("large-amount", StatementJson(b.Id, 2, new("A", 3_000_000_000_000), new("B", 0)));
+            Assert(edge.Exit == 2 && ReadJson(Path.Combine(edge.Folder, "discrepancies.json")).GetProperty("issues")[0].GetProperty("actualAmountMinor").GetInt64() == 3_000_000_000_000);
+        });
+        foreach (var mismatch in new[] { ("book", matching.Replace(b.Id, new string('a', 32)), "bookMismatch"), ("unit", matching.Replace("LAB", "USD"), "unitMismatch"), ("scale", matching.Replace("\"scale\":2", "\"scale\":3"), "unitMismatch"), ("scope", matching.Replace("\"throughSequence\":2", "\"throughSequence\":1"), "scopeMismatch"), ("all", matching.Replace(b.Id, new string('a', 32)).Replace("LAB", "USD").Replace("\"throughSequence\":2", "\"throughSequence\":1"), "scopeMismatch") })
+            Test("m1-ac04-scope-" + mismatch.Item1, () =>
+            {
+                var r = Compare("scope-" + mismatch.Item1, mismatch.Item2);
+                Assert(r.Exit == 2 && r.Output.GetProperty("result").GetProperty(mismatch.Item3).GetBoolean());
+                Assert(ReadJson(Path.Combine(r.Folder, "discrepancies.json")).GetProperty("issues").GetArrayLength() == 0);
+                Assert(ReadJson(Path.Combine(r.Folder, "summary.json")).GetProperty("bookId").GetString() == b.Id);
+            });
+        string valid = StatementJson(b.Id, 2, new("A", 100), new("B", 200));
+        var invalid = new List<(string, string)>
+        {
+            ("duplicate-key", valid.Insert(1, "\"unit\":\"LAB\",")),
+            ("nested-key", valid.Replace("\"amountMinor\":100", "\"amountMinor\":100,\"amountMinor\":100")),
+            ("extra-key", valid.Insert(1, "\"extra\":1,")),
+            ("missing-key", valid.Replace("\"scale\":2,", "")),
+            ("unsupported-schema", valid.Replace("synthetic-statement-v1", "other-v1")),
+            ("depth", new string('[', 9) + new string(']', 9)),
+            ("bytes", new string(' ', 1024 * 1024 + 1)),
+            ("rows", StatementJson(b.Id, 2, Enumerable.Repeat(new StatementRow("A", 100), 1001).ToArray()))
+        };
+        foreach (string token in new[] { "1e2", "100.0", "\"100\"", "-1", "9223372036854775808", "3000000000001" })
+            invalid.Add(("number-" + invalid.Count, valid.Replace("\"amountMinor\":100", "\"amountMinor\":" + token)));
+        foreach (var item in invalid)
+            Test("m1-ac05-reject-" + item.Item1, () =>
+            {
+                string before = BookFingerprint(b.Folder);
+                var r = Compare("invalid-" + item.Item1, item.Item2);
+                Assert(r.Exit == 1 && !r.Output.GetProperty("complete").GetBoolean() && !Directory.Exists(r.Folder));
+                Assert(BookFingerprint(b.Folder) == before);
+            });
+        Test("m1-ac06-repeat-bytes-whitespace-and-culture", () =>
+        {
+            var first = Compare("repeat-one", negative);
+            var previous = System.Globalization.CultureInfo.CurrentCulture;
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("fa-IR");
+                var second = Compare("repeat-two", negative);
+                foreach (string name in new[] { "summary.json", "summary.txt", "discrepancies.json" })
+                    Assert(File.ReadAllBytes(Path.Combine(first.Folder, name)).SequenceEqual(File.ReadAllBytes(Path.Combine(second.Folder, name))), name);
+            }
+            finally { System.Globalization.CultureInfo.CurrentCulture = previous; }
+            var changed = Compare("repeat-whitespace", " \n" + negative + "\n");
+            var a = ReadJson(Path.Combine(first.Folder, "discrepancies.json"));
+            var z = ReadJson(Path.Combine(changed.Folder, "discrepancies.json"));
+            Assert(a.GetProperty("statementSha256").GetString() != z.GetProperty("statementSha256").GetString());
+            Assert(a.GetProperty("snapshotReceiptListSha256").GetString() == z.GetProperty("snapshotReceiptListSha256").GetString());
+            Assert(a.GetProperty("issues").GetRawText() == z.GetProperty("issues").GetRawText());
+        });
+        Test("m1-ac07-literal-2001-issues", () =>
+        {
+            var r = Compare("2001", StatementJson(b.Id, 2, Enumerable.Repeat(new StatementRow("X", 1), 1000).ToArray()));
+            Assert(r.Exit == 2);
+            var result = r.Output.GetProperty("result");
+            Assert(result.GetProperty("duplicates").GetInt32() == 999 && result.GetProperty("unexpected").GetInt32() == 1000 && result.GetProperty("missing").GetInt32() == 2 && result.GetProperty("wrongAmount").GetInt32() == 0 && result.GetProperty("diagnosticCodes").GetArrayLength() == 20);
+            var issues = ReadJson(Path.Combine(r.Folder, "discrepancies.json")).GetProperty("issues");
+            Assert(issues.GetArrayLength() == 2001);
+            Assert(issues[0].GetProperty("code").GetString() == "UNEXPECTED_REQUEST_ID");
+            for (int row = 2; row <= 1000; row++)
+            {
+                var duplicate = issues[2 * row - 3];
+                var unexpected = issues[2 * row - 2];
+                Assert(duplicate.GetProperty("code").GetString() == "DUPLICATE_REQUEST_ID" && duplicate.GetProperty("firstStatementRowIndex").GetInt32() == 1);
+                Assert(unexpected.GetProperty("code").GetString() == "UNEXPECTED_REQUEST_ID");
+                foreach (var issue in new[] { duplicate, unexpected })
+                    Assert(issue.GetProperty("statementRowIndex").GetInt32() == row && issue.GetProperty("requestId").GetString() == "X" && issue.GetProperty("actualAmountMinor").GetInt64() == 1 && issue.GetProperty("expectedAmountMinor").ValueKind == JsonValueKind.Null && issue.GetProperty("entrySequence").ValueKind == JsonValueKind.Null);
+            }
+            Assert(issues[1999].GetProperty("requestId").GetString() == "A" && issues[1999].GetProperty("expectedAmountMinor").GetInt64() == 100 && issues[1999].GetProperty("entrySequence").GetInt32() == 1);
+            Assert(issues[2000].GetProperty("requestId").GetString() == "B" && issues[2000].GetProperty("expectedAmountMinor").GetInt64() == 200 && issues[2000].GetProperty("entrySequence").GetInt32() == 2);
+        });
+        Test("m1-ac07-1000-posts-and-rows", () =>
+        {
+            // Existing independent capacity fixture is already at the contract boundary.
+            string folder = Fresh("capacity"), id = Safe.Owned(folder);
+            string input = Fresh("m1-capacity.json"), output = Fresh("m1-capacity-report");
+            File.WriteAllText(input, StatementJson(id, 1000, Enumerable.Range(1, 1000).Select(i => new StatementRow("REQ_" + i, i)).ToArray()));
+            string before = BookFingerprint(folder);
+            Assert(Cli("reconcile", folder, input, output).Exit == 0 && BookFingerprint(folder) == before);
+            AssertDetailBinding(output);
+            Assert(ReadJson(Path.Combine(output, "discrepancies.json")).GetProperty("issues").GetArrayLength() == 0);
+        });
+        Test("m1-ac08-quiescent-book-unchanged", () =>
+        {
+            string before = BookFingerprint(b.Folder);
+            var snapshot = Store.Snapshot(b.Folder);
+            Assert(Compare("no-write-pass", matching).Exit == 0);
+            Assert(Compare("no-write-fail", negative).Exit == 2);
+            Assert(Compare("no-write-malformed", "{").Exit == 1);
+            Report.BeforeFileForTests = (_, _) => throw new IOException("CONTROLLED_REPORT_FAILURE");
+            Assert(Compare("no-write-report-failure", matching).Exit == 1);
+            Report.BeforeFileForTests = null;
+            Assert(BookFingerprint(b.Folder) == before, "BOOK_BYTES_OR_INVENTORY_CHANGED");
+            var after = Store.Snapshot(b.Folder);
+            Assert(after.Entries.Select(e => (e.Sequence, e.Post.Canonical, e.Receipt, e.ReceiptSha256)).SequenceEqual(snapshot.Entries.Select(e => (e.Sequence, e.Post.Canonical, e.Receipt, e.ReceiptSha256))), "LOGICAL_JOURNAL_CHANGED");
+        });
+        Test("m1-ac09-details-one-snapshot", () =>
+        {
+            var owned = Book("m1-snapshot");
+            Store.Apply(owned.Folder, Demo.Request(owned.Id, "A", 100));
+            var snapshot = Store.Snapshot(owned.Folder);
+            string input = Fresh("m1-snapshot.json"), output = Fresh("m1-snapshot-report");
+            File.WriteAllText(input, StatementJson(owned.Id, 1, new StatementRow("A", 99)));
+            Reconcile.SnapshotForTests = () => Store.Apply(owned.Folder, Demo.Request(owned.Id, "LATER", 10));
+            Assert(Cli("reconcile", owned.Folder, input, output).Exit == 2);
+            AssertDetailBinding(output);
+            var detail = ReadJson(Path.Combine(output, "discrepancies.json"));
+            Assert(detail.GetProperty("issues").GetArrayLength() == 1 && detail.GetProperty("throughSequence").GetInt32() == 1 && Store.Snapshot(owned.Folder).LastSequence == 2);
+            Assert(detail.GetProperty("snapshotReceiptListSha256").GetString() == IndependentHash(Bytes(LiteralSnapshotFrame(snapshot))));
+        });
+        foreach (string phase in new[] { "write:discrepancies.json", "write:summary.txt", "write:summary.json", "rename:discrepancies.json", "rename:summary.txt", "rename:summary.json" })
+            foreach (string fault in new[] { "exception", "collision", "ownership" })
+                Test("m1-ac10-" + phase + "-" + fault, () =>
+                {
+                    string before = BookFingerprint(b.Folder);
+                    string? sentinel = null;
+                    Report.BeforeFileForTests = (folder, observed) =>
+                    {
+                        if (observed != phase) return;
+                        Assert(!File.Exists(Path.Combine(folder, "summary.json")), "SUMMARY_PUBLISHED_EARLY");
+                        if (fault == "exception") throw new IOException("CONTROLLED_WRITE_OR_RENAME_FAILURE");
+                        if (fault == "ownership") File.WriteAllText(Path.Combine(folder, ".ledger-owned"), new string('f', 32));
+                        else
+                        {
+                            string name = phase.Split(':')[1];
+                            // A final-path directory causes a rename collision without introducing a forged summary file.
+                            sentinel = Path.Combine(folder, name + (phase.StartsWith("write:", StringComparison.Ordinal) ? ".pending" : ""));
+                            if (phase.StartsWith("write:", StringComparison.Ordinal)) File.WriteAllText(sentinel, "occupied");
+                            else { Directory.CreateDirectory(sentinel); File.WriteAllText(Path.Combine(sentinel, "sentinel"), "occupied"); }
+                        }
+                    };
+                    var r = Compare("fault-" + phase.Replace(':', '-') + "-" + fault, matching);
+                    Assert(r.Exit == 1 && !r.Output.GetProperty("complete").GetBoolean() && r.Output.GetProperty("outcome").GetString() == "incomplete");
+                    Assert(!File.Exists(Path.Combine(r.Folder, "summary.json")) && BookFingerprint(b.Folder) == before);
+                    if (sentinel != null) Assert(File.Exists(sentinel) ? File.ReadAllText(sentinel) == "occupied" : File.ReadAllText(Path.Combine(sentinel, "sentinel")) == "occupied");
+                    if (fault == "ownership") Assert(File.ReadAllText(Path.Combine(r.Folder, ".ledger-owned")) == new string('f', 32));
+                });
+        Test("m1-ac10-summary-last-observed", () =>
+        {
+            List<string> phases = [];
+            Report.BeforeFileForTests = (folder, phase) =>
+            {
+                phases.Add(phase);
+                Assert(!File.Exists(Path.Combine(folder, "summary.json")));
+                if (phase == "rename:summary.json") Assert(File.Exists(Path.Combine(folder, "discrepancies.json")) && File.Exists(Path.Combine(folder, "summary.txt")));
+            };
+            Assert(Compare("summary-last", matching).Exit == 0);
+            Assert(phases.SequenceEqual(new[] { "write:discrepancies.json", "write:summary.txt", "write:summary.json", "rename:discrepancies.json", "rename:summary.txt", "rename:summary.json" }));
+        });
+        Test("m1-ac10-output-exists-and-overlap", () =>
+        {
+            string input = Fresh("m1-existing-input.json"), output = Fresh("m1-existing-output");
+            File.WriteAllText(input, matching);
+            Directory.CreateDirectory(output);
+            File.WriteAllText(Path.Combine(output, "sentinel"), "untouched");
+            Assert(Cli("reconcile", b.Folder, input, output).Exit == 1 && File.ReadAllText(Path.Combine(output, "sentinel")) == "untouched");
+            Assert(Cli("reconcile", b.Folder, input, Path.Combine(b.Folder, "report")).Exit == 1);
+            Assert(Cli("reconcile", b.Folder, input, input).Exit == 1 && File.ReadAllText(input) == matching);
+        });
+        foreach (bool bytesOverLimit in new[] { false, true })
+            Test("m1-ac10-" + (bytesOverLimit ? "byte" : "issue") + "-cap-incomplete", () =>
+            {
+                var snapshot = Store.Snapshot(b.Folder);
+                var issue = new Discrepancy("UNEXPECTED_REQUEST_ID", bytesOverLimit ? new string('x', 2 * 1024 * 1024) : "X", 1, null, null, 1, null);
+                // These guards cannot be exceeded by valid bounded input today; exercise the actual serialization boundary directly.
+                var issues = Enumerable.Repeat(issue, bytesOverLimit ? 1 : 4001).ToArray();
+                string output = Fresh("m1-cap-" + bytesOverLimit);
+                Problem(() => Report.Write(output, new { outcome = "fail" }, summary => Discrepancies.Serialize(summary, snapshot, new string('a', 64), new string('b', 64), issues)), bytesOverLimit ? "DISCREPANCY_BYTE_LIMIT" : "DISCREPANCY_ISSUE_LIMIT");
+                Assert(!File.Exists(Path.Combine(output, "summary.json")) && !File.Exists(Path.Combine(output, "discrepancies.json")));
+                Report.BeforeWriteForTests = _ => Discrepancies.Serialize([], snapshot, "", "", issues);
+                var r = Compare("cli-cap-" + bytesOverLimit, matching);
+                Assert(r.Exit == 1 && !r.Output.GetProperty("complete").GetBoolean() && r.Output.GetProperty("reason").GetString() == (bytesOverLimit ? "DISCREPANCY_BYTE_LIMIT" : "DISCREPANCY_ISSUE_LIMIT"));
+            });
+        Test("m1-ac11-summary-and-demo-compatibility", () =>
+        {
+            var r = Compare("legacy-summary", matching);
+            var snapshot = Store.Snapshot(b.Folder);
+            string expectedSummary = Contract.Serialize(new { schema = "synthetic-reconciliation-report-v1", version = Contract.Version, toolBuild = Report.Build, bookId = b.Id, declaredBookId = b.Id, statementSha256 = IndependentHash(Bytes(matching)), snapshotDigestSchema = "synthetic-ledger-snapshot-v1", snapshotReceiptListSha256 = IndependentHash(Bytes(LiteralSnapshotFrame(snapshot))), result = Reconcile.Compare(snapshot, Statement.Parse(Bytes(matching))), limits = Report.Limits }) + "\n";
+            Assert(File.ReadAllText(Path.Combine(r.Folder, "summary.json")) == expectedSummary);
+            Assert(ReadJson(Path.Combine(r.Folder, "summary.json")).EnumerateObject().Select(p => p.Name).SequenceEqual(new[] { "schema", "version", "toolBuild", "bookId", "declaredBookId", "statementSha256", "snapshotDigestSchema", "snapshotReceiptListSha256", "result", "limits" }));
+            Assert(r.Output.GetProperty("result").EnumerateObject().Select(p => p.Name).SequenceEqual(new[] { "complete", "outcome", "snapshotSequence", "bookMismatch", "unitMismatch", "scopeMismatch", "missing", "unexpected", "duplicates", "wrongAmount", "diagnosticCodes", "exitCode", "provenance", "freshness", "externalCompleteness" }));
+            string expectedText = "Financial Reconciliation Ledger: pass\nVersion " + Contract.Version + "; synthetic LAB scale2 only.\nProvenance UNVERIFIED; freshness NOT_CHECKED; external completeness NOT_PROVEN.\nSee summary.json for exact counts and receipt disposition.\n" + Report.Limits + "\n";
+            Assert(File.ReadAllText(Path.Combine(r.Folder, "summary.txt")) == expectedText);
+            string demo = Fresh("m1-demo-unchanged");
+            Assert(Cli("demo", demo).Exit == 0 && !File.Exists(Path.Combine(demo, "report", "discrepancies.json")));
         });
     }
 

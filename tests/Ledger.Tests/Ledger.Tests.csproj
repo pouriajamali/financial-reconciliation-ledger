@@ -1,4 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>Exe</OutputType><AssemblyName>Ledger.Tests</AssemblyName><RuntimeFrameworkVersion>10.0.14</RuntimeFrameworkVersion></PropertyGroup>
+  <PropertyGroup><OutputType>Exe</OutputType><AssemblyName>Ledger.Tests</AssemblyName><RuntimeFrameworkVersion>10.0.15</RuntimeFrameworkVersion></PropertyGroup>
   <ItemGroup><ProjectReference Include="../../src/Ledger/Ledger.csproj" /></ItemGroup>
 </Project>
