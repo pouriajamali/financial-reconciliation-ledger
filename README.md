@@ -129,3 +129,9 @@ unchanged; making a repository private cannot retract previously published copie
 No customer demand, sales, revenue, exclusive authorship or independent-skill claim.
 
 [CI resource policy](docs/CI-POLICY.md): documentation-only changes get real lightweight document/pipeline checks; source, tag and manual runs retain native validation. Published runtime tags and release assets remain unchanged.
+
+## Source readability
+
+The current source expands compact C# layout for review. The published preview links identify its frozen runtime release. Formatting preserves complete syntax, token text and values, comments and directives; it does not introduce a runtime behavior or performance claim.
+
+To reproduce a published package, use its exact original runtime source: [v0.1.0-preview.1 source](https://github.com/pouriajamali/financial-reconciliation-ledger/tree/f137244914e8b392fffab386756fa12eb43f00f1) (`f137244914e8b392fffab386756fa12eb43f00f1`). Later `main` layout is reviewed separately from those frozen release commits.
