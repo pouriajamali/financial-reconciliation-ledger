@@ -12,24 +12,34 @@ a previously trusted checkout before accepting a new download. A key and a
 fingerprint obtained together from the same untrusted release are not independent
 identity proof. The key is public; never share or request the private signing key.
 
-## Local M1 candidate boundary
+## Current preview and frozen source
 
-Source0.1.0-preview.2 is currently a local review candidate, not a published tag or
-download. It uses SDK10.0.404/runtime and provider10.0.15. Candidate commit signature
-verification is separate from archive publication, checksum signing, hosted CI and
-matching-OS Linux execution. The examples below intentionally continue to verify
-the immutable published0.1.0-preview.1 artifacts; do not change their checksums,
-signatures or source identity. Future0.1.0-preview.2 publication requires a separate
-approval, matching-OS archive evidence and the complete signing/download checks.
+The examples below select [v0.1.0-preview.2](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.2),
+whose signed annotated tag is `55a88ef8bed94ac55d961f898f8544466917d5dd` and
+whose source commit is `68aaecf26e9cd87190445f936c6df660d67e6bc5`.
+[Exact-tag native CI](https://github.com/pouriajamali/financial-reconciliation-ledger/actions/runs/42880953244)
+built, extracted and executed Windows/Ubuntu archives from that commit.
+Commit/tag signatures, checksum signatures and OS binary signing are separate.
+
+Use the verification files from the same versioned release as the chosen archive.
+The independent fingerprint above remains the trust check; downloading a key and
+signature together is not independent identity proof. Keep the exact checksum
+bytes, including line endings, unchanged before verification.
+
+Tagged archives keep their source-time documentation snapshot. This current guide
+updates versioned download instructions without rewriting any signed archive.
+The immutable [v0.1.0-preview.1 release](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.1)
+and its [frozen source f137244914e8b392fffab386756fa12eb43f00f1](https://github.com/pouriajamali/financial-reconciliation-ledger/tree/f137244914e8b392fffab386756fa12eb43f00f1)
+remain available with their original checksums, signatures and source identity.
 
 ## What is signed
 
-The example below verifies **v0.1.0-preview.1**. Its
+The example below verifies **v0.1.0-preview.2**. Its
 `SHA256SUMS.txt.sig` is an SSH signature over the exact `SHA256SUMS.txt` bytes in
 the `file` namespace. Verify that signature first, then the chosen archive's hash.
 A matching unsigned hash alone is not authenticated provenance.
 
-Use the [release page](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.1)
+Use the [release page](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.2)
 and its exact tag/commit when selecting assets. An annotated signed tag and
 exact-source package manifests accompany public previews. Missing assets or a
 missing checksum signature are an incomplete publication; do not skip verification.
@@ -59,12 +69,12 @@ from the signed checksum file to verify a different OS archive.
 
 ```sh
 repo='pouriajamali/financial-reconciliation-ledger'
-tag='v0.1.0-preview.1'
-archive='financial-reconciliation-ledger-v0.1.0-preview.1-source.zip'
+tag='v0.1.0-preview.2'
+archive='financial-reconciliation-ledger-v0.1.0-preview.2-source.zip'
 for name in "$archive" SHA256SUMS.txt SHA256SUMS.txt.sig; do
   curl --fail --location --output "$name" "https://github.com/$repo/releases/download/$tag/$name" || exit 1
 done
-curl --fail --location --output SIGNING-PUBLIC-KEY.pub "https://raw.githubusercontent.com/$repo/main/SIGNING-PUBLIC-KEY.pub" || exit 1
+curl --fail --location --output SIGNING-PUBLIC-KEY.pub "https://github.com/$repo/releases/download/$tag/SIGNING-PUBLIC-KEY.pub" || exit 1
 ```
 
 ```sh
@@ -91,12 +101,12 @@ These commands do not install tools or change security settings.
 ```powershell
 $ErrorActionPreference = 'Stop'
 $repo = 'pouriajamali/financial-reconciliation-ledger'
-$tag = 'v0.1.0-preview.1'
-$archive = 'financial-reconciliation-ledger-v0.1.0-preview.1-source.zip'
+$tag = 'v0.1.0-preview.2'
+$archive = 'financial-reconciliation-ledger-v0.1.0-preview.2-source.zip'
 foreach ($name in @($archive, 'SHA256SUMS.txt', 'SHA256SUMS.txt.sig')) {
     Invoke-WebRequest -Uri "https://github.com/$repo/releases/download/$tag/$name" -OutFile $name
 }
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$repo/main/SIGNING-PUBLIC-KEY.pub" -OutFile SIGNING-PUBLIC-KEY.pub
+Invoke-WebRequest -Uri "https://github.com/$repo/releases/download/$tag/SIGNING-PUBLIC-KEY.pub" -OutFile SIGNING-PUBLIC-KEY.pub
 ```
 
 ```powershell

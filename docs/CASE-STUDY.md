@@ -68,5 +68,29 @@ The existing SQLite open still allows normal hot-journal recovery, so arbitrary
 crashed books are outside the physical no-write observation. The scenario remains
 synthetic LAB capture comparison, with no PSP integration, real currency, new fee,
 refund/partial-settlement handling or case queue. Customer demand, revenue and
-accounting certification remain unproven. The local Windows candidate is separate
-from future exact-source Windows/Linux CI and any published preview.
+accounting certification remain unproven.
+
+## Versioned native evidence and downloads
+
+[Preview v0.1.0-preview.2](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.2)
+uses signed annotated tag `55a88ef8bed94ac55d961f898f8544466917d5dd` at source
+[`68aaecf26e9cd87190445f936c6df660d67e6bc5`](https://github.com/pouriajamali/financial-reconciliation-ledger/tree/68aaecf26e9cd87190445f936c6df660d67e6bc5).
+[Exact-tag CI run 42880953244](https://github.com/pouriajamali/financial-reconciliation-ledger/actions/runs/42880953244)
+recorded Windows 144 passed / 0 failed / 1 explicit Linux-only FIFO skip and
+Ubuntu 145 passed / 0 failed / 0 skipped. Symlink refusal passed on both runners;
+Linux FIFO refusal passed on Ubuntu. Each job built, extracted and executed its
+actual matching-OS self-contained archive: 22 package checks passed per OS, with
+runtime 10.0.15 and provider assembly 10.0.15.0 in the test receipts.
+
+The aggregation job reused those tested runtime archives without rebuilding,
+verified their manifests/hashes, and generated the exact tagged source ZIP.
+Use the versioned downloads and [known-key verification guide](../PROVENANCE.md)
+before extracting or running them. Signature verification and native tests have
+different coverage; neither is accounting, security, clean-install or business
+certification. A documentation-only CI success is not native execution evidence.
+
+The archived README/provenance text remains its source-time snapshot; current
+documentation updates publication pointers without changing frozen package bytes.
+The older [v0.1.0-preview.1 release](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.1)
+and its [f137244914e8b392fffab386756fa12eb43f00f1 source](https://github.com/pouriajamali/financial-reconciliation-ledger/tree/f137244914e8b392fffab386756fa12eb43f00f1)
+retain their original assets, signatures and reproduction baseline.

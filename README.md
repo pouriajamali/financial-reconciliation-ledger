@@ -5,12 +5,11 @@ receipts and offline statement comparison. **No real money or account connection
 The useful result is the engineering decision and its evidence: what is rejected,
 what survives a controlled process interruption, and which test demonstrates it.
 
-## Local source candidate: 0.1.0-preview.2
+## Complete discrepancy reports: 0.1.0-preview.2
 
-This branch adds complete per-row discrepancy details to standalone `reconcile`.
-It is a local review candidate, with no published0.1.0-preview.2 download or new
-Linux execution/CI claim yet. The ready download below is the immutable older
-preview and does not contain the new sidecar. Build the current source to review it.
+The current preview adds complete per-row discrepancy details to standalone
+`reconcile`. Use the versioned packages and verification files below; the
+immutable older preview remains available for its original behavior.
 
 `discrepancies.json` identifies each missing/unexpected/duplicate/wrong-amount issue
 by synthetic request ID,1-based statement row, audited sequence and expected/actual
@@ -18,7 +17,7 @@ integer amounts. Categories overlap; details are never silently truncated. It is
 bound to the exact summary bytes and the same single snapshot. Check the summary's
 outcome and scope flags too: empty details do not override a mismatched book/scope.
 See the [sidecar contract](docs/CONTRACT.md) and
-[candidate notes](docs/RELEASE-v0.1.0-preview.2.md).
+[release notes](docs/RELEASE-v0.1.0-preview.2.md).
 
 Both summary formats, exit codes, strict input JSON, LAB/scale2 accounts and saved
 receipts remain compatible. Only standalone comparison adds the file; `demo` keeps
@@ -26,10 +25,21 @@ its existing output. No posting/settlement action or human case queue is added.
 
 ## Try the ready package
 
-[Preview v0.1.0-preview.1 and downloads](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.1)
+[Preview v0.1.0-preview.2 and downloads](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.2)
 contains self-contained Windows x64 and Ubuntu 24.04/glibc x64 bundles, plus source.
 An installed .NET SDK is unnecessary for those bundles. Existing native OS
 prerequisites still apply; this is not a clean-machine certification.
+
+| Package | Download |
+|---|---|
+| Windows x64 | [ZIP](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/download/v0.1.0-preview.2/financial-reconciliation-ledger-v0.1.0-preview.2-win-x64.zip) |
+| Ubuntu 24.04/glibc x64 | [tar.gz](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/download/v0.1.0-preview.2/financial-reconciliation-ledger-v0.1.0-preview.2-linux-x64.tar.gz) |
+| Exact tagged source | [ZIP](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/download/v0.1.0-preview.2/financial-reconciliation-ledger-v0.1.0-preview.2-source.zip) |
+
+Verification files: [SHA256SUMS.txt](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/download/v0.1.0-preview.2/SHA256SUMS.txt),
+[checksum signature](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/download/v0.1.0-preview.2/SHA256SUMS.txt.sig),
+[public signing key](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/download/v0.1.0-preview.2/SIGNING-PUBLIC-KEY.pub).
+Verify them before extracting or executing a package.
 
 Download your archive, `SHA256SUMS.txt`, its `.sig` and `SIGNING-PUBLIC-KEY.pub`.
 Follow the [known-key verification guide](PROVENANCE.md) **before extracting or
@@ -60,7 +70,8 @@ receipt bytes and SHA256**, keeping two journal entries. Matching comparison exi
 the deliberately negative comparison exits2 and reports missing1, unexpected2,
 duplicate1 and wrongAmount1. That negative outcome is expected evidence.
 Read `demo-new/report/summary.json` and `summary.txt`, or each comparison's report.
-The book remains local; nothing is sent over a network.
+Standalone comparison folders also contain `discrepancies.json`; the demo report
+keeps its existing format. The book remains local; nothing is sent over a network.
 
 ## Decisions and proof
 
@@ -72,6 +83,7 @@ The book remains local; nothing is sent over a network.
 | Canonical content binds request ID | Reordered equivalent input replays; changed content conflicts; full-capacity replay still works | `journal-reordered-request-exact-receipt`, `capacity-replay-and-new-refusal` |
 | Audit stored facts before accepting a book | Altered schema/trigger/storage class/split/hash/receipt is incomplete | `audit-*` |
 | Compare one identified snapshot | Later appends stay outside that snapshot; duplicate rows are counted | `comparison-snapshot-later-append`, `comparison-exact-error-counts` |
+| Complete discrepancy details | Exact seven-issue and full 2001-issue reports retain overlapping counts and summary binding | `m1-ac02-literal-seven-issues`, `m1-ac07-literal-2001-issues` |
 | Report failure is never green | Malformed statement or occupied pending report exits1 | `statement-duplicate-key-cli-incomplete`, `report-collision-never-pass` |
 
 These process tests are **not power-loss durability or distributed exactly-once
@@ -142,6 +154,13 @@ later-append behavior, quiescent no-post checks and each pending-write/final-ren
 ownership/collision/failure boundary. Cap rejection is tested directly with deliberately
 over-limit internal values; valid bounded inputs cannot reach those guards today.
 
+[Exact-tag native CI](https://github.com/pouriajamali/financial-reconciliation-ledger/actions/runs/42880953244) ran at
+`68aaecf26e9cd87190445f936c6df660d67e6bc5`: Windows 144 passed / 0 failed /
+1 explicit Linux-only FIFO skip; Ubuntu 145 passed / 0 failed / 0 skipped.
+The symlink case passed on both runners. Each job built, extracted and executed
+its actual matching-OS archive, with 22 package checks passing per OS. These
+observations are separate from the earlier source and documentation-only CI runs.
+
 Tests create fresh synthetic books. Interruption/concurrency workers belong only
 to the test assembly and are excluded from distributables. OS-specific skips are
 explicit in `receipt.json`; existing WSL hosts are not empty-OS installs. No
@@ -162,10 +181,17 @@ No customer demand, sales, revenue, exclusive authorship or independent-skill cl
 
 ## Source and published runtime
 
-The earlier readability baseline preserved syntax/token values. This branch adds
-the discrepancy sidecar and approved servicing: SDK10.0.404, runtime/provider10.0.15,
-with SQLitePCLRaw2.1.13 retained. These are current-source requirements; frozen
-v0.1.0-preview.1 packages retain their original10.0.14 runtime/provider and SDK10.0.403
-reproduction baseline. The old download links intentionally continue to name them.
+The discrepancy sidecar uses SDK 10.0.404, runtime/provider 10.0.15 and
+SQLitePCLRaw 2.1.13. Reproduce the current packages from
+[signed tag v0.1.0-preview.2](https://github.com/pouriajamali/financial-reconciliation-ledger/tree/v0.1.0-preview.2), exact source
+[`68aaecf26e9cd87190445f936c6df660d67e6bc5`](https://github.com/pouriajamali/financial-reconciliation-ledger/tree/68aaecf26e9cd87190445f936c6df660d67e6bc5).
+Later documentation on `main` does not change these tagged archive bytes.
 
-To reproduce a published package, use its exact original runtime source: [v0.1.0-preview.1 source](https://github.com/pouriajamali/financial-reconciliation-ledger/tree/f137244914e8b392fffab386756fa12eb43f00f1) (`f137244914e8b392fffab386756fa12eb43f00f1`). Later `main` layout is reviewed separately from those frozen release commits.
+Archives retain the documentation snapshot at their source commit, including
+prepublication status wording. This current page provides the updated download
+pointers; old archives are not rewritten to refresh that historical wording.
+
+The immutable [previous preview v0.1.0-preview.1](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.1)
+retains its original runtime/provider 10.0.14 and SDK 10.0.403 reproduction baseline.
+Its exact [frozen source f137244914e8b392fffab386756fa12eb43f00f1](https://github.com/pouriajamali/financial-reconciliation-ledger/tree/f137244914e8b392fffab386756fa12eb43f00f1)
+and existing assets, checksums, signatures and tags remain unchanged.
