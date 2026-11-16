@@ -1,0 +1,38 @@
+{
+  "schema": "frl01-own-sdk11-normal-route-contract/v1",
+  "projectId": "01",
+  "repository": "pouriajamali/financial-reconciliation-ledger",
+  "sourceOnly": true,
+  "parentAmendedContractSha256": "142dac81ae7f6e05f52319d3521d4825d5df028e37542b7623d16316ff7dd077",
+  "productContract": {
+    "path": "docs/CONTRACT.md",
+    "sha256": "ab6579d16c33da060ccfd926f4fae751993a98622f515f1d5bbf3af0cbb2df91"
+  },
+  "sharedInterface": {
+    "sha256": "7758af794c41c5caf6a567283e479a826b53b93511d1f6704fcd040121cb78a5",
+    "candidateSha256": "d76a111eb930f3bc5679ded826bd6626d69feae4700ec3b615272bd197546d82"
+  },
+  "normalModuleSha256": "d9c690d8c82825b018c04089c279036829d3baf2534c2634bba84910c415a37d",
+  "normalCatalogSha256": "686c6c778f7841e6015fa401f3892b853df80e3341fbb5d02b27c682887c1c78",
+  "frozenConsumerDefinition": "urn:pouria:dotnet11-host-qualification:v1#/$defs/consumerAdmission",
+  "schemaSha256": "63e04fa5d270c87b93e6e1f4c38bfbcf336b950b39fe1854dc4e514f0661f14c",
+  "limits": {
+    "memoryBytes": 2147483648,
+    "cpuEquivalentMax": 2,
+    "linuxTasks": 64,
+    "linuxSwapBytes": 0,
+    "windowsProcesses": 32,
+    "rowSeconds": 900,
+    "rows": 2,
+    "maxParallel": 1,
+    "extraJobsEventsCachesArtifacts": 0,
+    "generatedBytes": 4294967296,
+    "generatedEntries": 60000,
+    "logsBytes": 33554432,
+    "proofBytes": 8388608
+  },
+  "clock": "One original row/bootstrap monotonic start and absolute end; held evidence, service hard deadline and callable context agree; no fresh deadline. Transport stage150s is a stricter inherited alarm inside the unchanged outer deadline.",
+  "acceptance": "Original Windows144/Linux145 regressions,22 extracted checks and14 literal compatibility scenarios; existing locks/notices/signatures/advisories unchanged; full native prerequisite closure must pass before first SDK invocation.",
+  "readiness": "Linux fact757ab belongs only to producer04 historical run/instance. Current own exact source/profile/held route must be separately admitted. Windows normal DENIED. Global SDK_READY false.",
+  "execution": "No authority to apply, acquire, run SDK/native/CI or publish from this source-only contract."
+}

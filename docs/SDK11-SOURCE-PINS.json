@@ -1,0 +1,281 @@
+{
+  "schema": "sdk11-own-source-pins/v1",
+  "state": "EXACT_SOURCE_REVIEWED",
+  "projectId": "01",
+  "repository": "pouriajamali/financial-reconciliation-ledger",
+  "sourcePins": [
+    {
+      "path": ".gitattributes",
+      "mode": "100644",
+      "gitBlob": "0f99a0a1325f8e79842e90c6824ba28f2878876c"
+    },
+    {
+      "path": ".github/ci/policy.py",
+      "mode": "100644",
+      "gitBlob": "098fd3461ee76c12c245ea58dc9d8be9d1af9508"
+    },
+    {
+      "path": ".github/ci/test_policy.py",
+      "mode": "100644",
+      "gitBlob": "f4ffb99cbcb59d0dafe05db17d1ef8d6df364bda"
+    },
+    {
+      "path": ".github/workflows/verify.yml",
+      "mode": "100644",
+      "gitBlob": "fe197e1566d68cec1660f2c2d876c1af28bb5962"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "gitBlob": "802a41a3c9cef7da36ff6b99aac1146d040779ca"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "mode": "100644",
+      "gitBlob": "0750d0f1f2efed7caeec2f4f1cc3e4535b004971"
+    },
+    {
+      "path": "Directory.Build.props",
+      "mode": "100644",
+      "gitBlob": "19202883c93cd4d3fa41cee2f1dae1fefb9e5f80"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "gitBlob": "e67e64a5ab7fcec5def82845d73fc7f96f82c9ba"
+    },
+    {
+      "path": "NOTICE.md",
+      "mode": "100644",
+      "gitBlob": "4a0f5fa90078146ac033d041b14bf132e9e4ba8c"
+    },
+    {
+      "path": "PROVENANCE.md",
+      "mode": "100644",
+      "gitBlob": "a9ad5bbddf8c72816853ad9ef72549ee86a68c6c"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "gitBlob": "644863588f318122da426c64f93516ce1cb70152"
+    },
+    {
+      "path": "SIGNING-PUBLIC-KEY.pub",
+      "mode": "100644",
+      "gitBlob": "260690d2d8ede6631c0792fe61d2883c383f5466"
+    },
+    {
+      "path": "docs/ACCEPTED-CLARIFICATIONS.md",
+      "mode": "100644",
+      "gitBlob": "f9e760e03817ce007271139ff3d430209c0ab41d"
+    },
+    {
+      "path": "docs/CASE-STUDY.md",
+      "mode": "100644",
+      "gitBlob": "5697ed882ab545ec396eb6206813850891b30067"
+    },
+    {
+      "path": "docs/CI-POLICY.md",
+      "mode": "100644",
+      "gitBlob": "d2edb4c997eca20f0cc757f5918eee8ed6681ad6"
+    },
+    {
+      "path": "docs/CONTRACT.md",
+      "mode": "100644",
+      "gitBlob": "b0391a887941fb2e2167f99a76b8f48925f5ce0f"
+    },
+    {
+      "path": "docs/RELEASE-v0.1.0-preview.1.md",
+      "mode": "100644",
+      "gitBlob": "bebc144f880ab94e20434cb85703729eb8c45862"
+    },
+    {
+      "path": "docs/RELEASE-v0.1.0-preview.2.md",
+      "mode": "100644",
+      "gitBlob": "78f270d7c1ef6fe096dda65379512453043c5467"
+    },
+    {
+      "path": "docs/RELEASE-v0.1.0-preview.3.md",
+      "mode": "100644",
+      "gitBlob": "804ca2cbf8974e20b74506909bbf16a5543e2e6d"
+    },
+    {
+      "path": "docs/SDK11-OWN-ROUTE-CONTRACT.json",
+      "mode": "100644",
+      "gitBlob": "148f819a69a533027a1fa9e1cf97595d630a3fc3"
+    },
+    {
+      "path": "global.json",
+      "mode": "100644",
+      "gitBlob": "1ab7a3c415aabd88d676657c9d092a938f7b87d4"
+    },
+    {
+      "path": "src/Ledger/Discrepancies.cs",
+      "mode": "100644",
+      "gitBlob": "7fbc1298353f392c26d0a1308c5891fae9df7c33"
+    },
+    {
+      "path": "src/Ledger/Ledger.csproj",
+      "mode": "100644",
+      "gitBlob": "b45cf0b43c5816d34d9baafb68a6790f912040a2"
+    },
+    {
+      "path": "src/Ledger/Models.cs",
+      "mode": "100644",
+      "gitBlob": "9a89a91c7cee1cda7e0507e574571c73950c8378"
+    },
+    {
+      "path": "src/Ledger/Program.cs",
+      "mode": "100644",
+      "gitBlob": "8e4b98429e6f1b94de675d62a26f02f7cc0b6396"
+    },
+    {
+      "path": "src/Ledger/Reconcile.cs",
+      "mode": "100644",
+      "gitBlob": "bf29e6ea3b2e90ca9e6b52d6c94a5e64427d2f0a"
+    },
+    {
+      "path": "src/Ledger/Safe.cs",
+      "mode": "100644",
+      "gitBlob": "0d2bcd0abd2c3c87bbfa27ac3eae5f9a2e3842bd"
+    },
+    {
+      "path": "src/Ledger/Store.cs",
+      "mode": "100644",
+      "gitBlob": "3f904e100ef7687c347a514942a75dd6b32bea44"
+    },
+    {
+      "path": "src/Ledger/packages.lock.json",
+      "mode": "100644",
+      "gitBlob": "84d8fb632a80f1661ea939181f475954fd8611c6"
+    },
+    {
+      "path": "tests/Ledger.Tests/Ledger.Tests.csproj",
+      "mode": "100644",
+      "gitBlob": "c8677401e82539332fbe5b6ba09bd7b755e7cd7f"
+    },
+    {
+      "path": "tests/Ledger.Tests/Program.cs",
+      "mode": "100644",
+      "gitBlob": "6d075048bc6922d18524a928640ebb7e51f87f1f"
+    },
+    {
+      "path": "tests/Ledger.Tests/packages.lock.json",
+      "mode": "100644",
+      "gitBlob": "31a515ccb2d215d53cd869601fb2d2b294571c05"
+    },
+    {
+      "path": "tools/check_dotnet11.py",
+      "mode": "100644",
+      "gitBlob": "313e6978edca571d32e1092d222f3aae54c40b27"
+    },
+    {
+      "path": "tools/check_package.py",
+      "mode": "100644",
+      "gitBlob": "8a6fdd4cf47c8b37b3475e112fda515f25469560"
+    },
+    {
+      "path": "tools/check_release.py",
+      "mode": "100644",
+      "gitBlob": "5b45bd122d9780c6d2d59d8ab2d97781499ef8b1"
+    },
+    {
+      "path": "tools/check_tech_refresh.py",
+      "mode": "100644",
+      "gitBlob": "8c6548b20c60b9889bf9b32710983be54fee8da7"
+    },
+    {
+      "path": "tools/ci/MANAGER-ADMISSION.json",
+      "mode": "100644",
+      "gitBlob": "4d371bc4202d9613cd78cb8478d321b23c4548cd"
+    },
+    {
+      "path": "tools/ci/PROFILE.json",
+      "mode": "100644",
+      "gitBlob": "ac2ad6d43964c3046c592a483e85719955519c98"
+    },
+    {
+      "path": "tools/ci/ci_host_controller.py",
+      "mode": "100644",
+      "gitBlob": "be1f6ede24e380d833f041cdb5d81a75a127a582"
+    },
+    {
+      "path": "tools/ci/ci_host_guard.py",
+      "mode": "100644",
+      "gitBlob": "76296c3379c17f86a89a1f6309331d019eedd8c3"
+    },
+    {
+      "path": "tools/ci/ci_pipeline.py",
+      "mode": "100644",
+      "gitBlob": "20eafd202a78ffe3ba7b203b7f7675e2bcd77a96"
+    },
+    {
+      "path": "tools/ci/frl01_phase.py",
+      "mode": "100644",
+      "gitBlob": "ddbd5e9ca4b2417ed23cae88fd15af053ec7b47c"
+    },
+    {
+      "path": "tools/ci/host_boundary_fixtures.json",
+      "mode": "100644",
+      "gitBlob": "202a4db713b92e75f037d6540534728eaf062129"
+    },
+    {
+      "path": "tools/ci/host_handshake.schema.json",
+      "mode": "100644",
+      "gitBlob": "6eb3e18285874b6412d6ec4ff8f5a64924e67e7a"
+    },
+    {
+      "path": "tools/ci/test_ci_host_guard.py",
+      "mode": "100644",
+      "gitBlob": "9a1f66458848336e0424fa72f4ed57495d14ca0e"
+    },
+    {
+      "path": "tools/ci/test_ci_normal_binding.py",
+      "mode": "100644",
+      "gitBlob": "ae8d29cc2c2da9d2be78e31c11635d428f9f2955"
+    },
+    {
+      "path": "tools/dotnet11-host-qualification.schema.json",
+      "mode": "100644",
+      "gitBlob": "4c505869b03dbf79c194bf8c7ca7b376ceee0223"
+    },
+    {
+      "path": "tools/materialize_qualification_linux.py",
+      "mode": "100644",
+      "gitBlob": "16e4e7ef7b2e7747a17714e4f6a551c40c9a4829"
+    },
+    {
+      "path": "tools/package.py",
+      "mode": "100644",
+      "gitBlob": "9db465014cc7b5ded4de933aa449bb28ff2433b0"
+    },
+    {
+      "path": "tools/qualification_input_guard.py",
+      "mode": "100644",
+      "gitBlob": "ebc36eade0d00b3d419aa995f4913117ba64abd6"
+    },
+    {
+      "path": "tools/sdk11-normal-inputs.lock.json",
+      "mode": "100644",
+      "gitBlob": "67eed2c29e0b11a3cc4b405994dfe41e7808f45d"
+    },
+    {
+      "path": "tools/sdk11-normal/.gitattributes",
+      "mode": "100644",
+      "gitBlob": "bbd7984e8d8399fecf37567807fd2c32c7489081"
+    },
+    {
+      "path": "tools/sdk11-normal/accepted-linux-acceptance.json",
+      "mode": "100644",
+      "gitBlob": "9ed6ac75a97db595caa5c6d9b84e03b7f21e7f2e"
+    },
+    {
+      "path": "tools/sdk11-normal/accepted-linux-fact.json",
+      "mode": "100644",
+      "gitBlob": "391173426f2a48f2fb9797d70cc7cb618bd5ffaf"
+    }
+  ],
+  "projectionOnly": true,
+  "executionApproved": false,
+  "authority": "Inert projected tree, pending consolidated exact source review and actual committed HEAD comparison. No Git invocation/commit attestation."
+}

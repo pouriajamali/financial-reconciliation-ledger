@@ -1,0 +1,72 @@
+{
+  "schema": "sdk11-own-normal-input-profile/v1",
+  "state": "ADMITTED_SOURCE_PROFILE",
+  "projectId": "01",
+  "designGateSha256": "9b3e0f376c5381b623f6a0f007bf6a6bb44f3dcbd1c2e4654de949a1eb97eec8",
+  "canonicalProtocolSha256": "9120ca49a0d46673053aa0ec0cdbbc6f00731d71ea0b57ddab09e8fc3ac3ac8b",
+  "localStates": {
+    "LinuxLocalUbuntu24": "UNQUALIFIED_R3_STOP",
+    "WindowsLocal26H2": "SUPPORT_UNKNOWN_SDK_TARGETS_EXCLUDED"
+  },
+  "hostClasses": {
+    "GitHubHostedWindowsServer2025x64": {
+      "rid": "win-x64",
+      "imageOS": "win25",
+      "memoryBytes": 2147483648,
+      "cpuEquivalentMax": 2,
+      "processLimit": 32,
+      "suspendedChild": true,
+      "killOnClose": true
+    },
+    "GitHubHostedUbuntu24.04x64": {
+      "rid": "linux-x64",
+      "imageOS": "ubuntu24",
+      "uidGid": "actual nonroot runner, never hardcoded1000",
+      "memoryBytes": 2147483648,
+      "cpuQuotaPercent": 200,
+      "tasksMax": 64,
+      "swapBytes": 0,
+      "starter": [
+        "/usr/bin/sudo",
+        "-n",
+        "/usr/bin/systemd-run"
+      ],
+      "workerBoundary": "User/Group actual runner; no root worker/acquisition/extraction/SDK/product; held worker membership before release"
+    }
+  },
+  "rowSeconds": 900,
+  "maxParallel": 1,
+  "verifyRows": 2,
+  "extraJobsEventsCachesArtifacts": 0,
+  "stageBudgetSeconds": {
+    "checkoutContext": 50,
+    "transportMaterialization": 150,
+    "newSdk0Boundary": 40,
+    "lockedRestoreAudit": 100,
+    "originalRegressions": 150,
+    "nativePackage": 120,
+    "extractOriginal22Checks": 90,
+    "unchangedCompatibility": 90,
+    "terminalProofUpload": 110
+  },
+  "logBytes": 33554432,
+  "generatedBytes": 4294967296,
+  "generatedEntries": 60000,
+  "proofPerRidBytes": 8388608,
+  "ordinaryRetentionDays": 3,
+  "tagRetentionDays": 7,
+  "rule": "Each substage is remaining-job-budget bounded; no additive resets or cap increase. Job context bootstrap/OS starter only outside target controls. All nontrivial worker/transport/extract/SDK/product under own Job or system cgroup.",
+  "sdkInput": "Only corresponding immutable accepted04host fact; no globalBoolean readiness predicate, no second SDK qualification",
+  "terminal": "Own held handle/PID/start; Windows active0 or actual Linux MainPID0/ControlPID0/populated0/result/exit, cause before collect. Missing/unloaded state without required proof = HOLD, never fabricate zero.",
+  "localCanonicalLane": "Unchanged live9120 membership/pin. CI job ownership is private ephemeral VM control metadata, not a competing local shared resource lane.",
+  "repository": "pouriajamali/financial-reconciliation-ledger",
+  "memoryMaxBytes": 2147483648,
+  "swapMaxBytes": 0,
+  "tasksMax": 64,
+  "cpuQuotaMicros": 200000,
+  "cpuPeriodMicros": 100000,
+  "ownedUnitPrefix": "frl01-ci-",
+  "inertCandidate": true,
+  "executionApproved": false,
+  "normalTransport": "Only identical shared callable d9c690d8, normal catalog686c6c77, frozen63e and actual current held worker; Windows DENIED."
+}

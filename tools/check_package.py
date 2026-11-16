@@ -15,7 +15,8 @@ def main():
  inventory=json.loads((package/'DEPENDENCIES.json').read_text(encoding='utf-8'))['packages'];assert any(d['id']=='Microsoft.Data.Sqlite' and d['version']=='10.0.15' for d in inventory)
  assert any(f.name.startswith('Microsoft.NETCore.App.Runtime') and 'THIRD-PARTY-NOTICES' in f.name.upper() for f in (package/'licenses').iterdir())
  config=json.loads((package/'ledger.runtimeconfig.json').read_text(encoding='utf-8'))['runtimeOptions'];assert 'includedFrameworks' in config and 'frameworks' not in config
- assert any(f['name']=='Microsoft.NETCore.App' and f['version']=='10.0.15' for f in config['includedFrameworks'])
+ if config.get('tfm')!='net11.0' or m.get('version')!='0.1.0-preview.3':raise RuntimeError('Exact net11.0/preview.3 package required')
+ assert any(f['name']=='Microsoft.NETCore.App' and f['version']=='11.0.0' for f in config['includedFrameworks'])
  checks=['manifest-source-dependencies-licenses-document-links'];exe=package/('ledger.exe' if os.name=='nt' else 'ledger');env=dict(os.environ,DOTNET_ROOT=str(work/'no-installed-dotnet'),DOTNET_ROOT_X64=str(work/'no-installed-dotnet'),DOTNET_MULTILEVEL_LOOKUP='0')
  def run(name,args,code):
   r=subprocess.run([str(exe),*map(str,args)],cwd=work,env=env,text=True,encoding='utf-8',capture_output=True,timeout=30)

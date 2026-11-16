@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "urn:pouria:dotnet11-host-qualification:v1#/$defs/consumerAdmission",
+  "description": "Reference only. Resolve exclusively to the exact hash-bound producer04 frozen source interface; not schema approval or runtime authority.",
+  "x-producer04-source-binding": {
+    "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\dotnet11-host-qualification.schema.json.txt",
+    "sha256": "63e04fa5d270c87b93e6e1f4c38bfbcf336b950b39fe1854dc4e514f0661f14c"
+  }
+}

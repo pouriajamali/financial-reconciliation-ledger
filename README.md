@@ -5,6 +5,22 @@ receipts and offline statement comparison. **No real money or account connection
 The useful result is the engineering decision and its evidence: what is rejected,
 what survives a controlled process interruption, and which test demonstrates it.
 
+## Source-only maintenance candidate: 0.1.0-preview.3
+
+This branch targets SDK11.0.100, net11.0, stable C#15 and self-contained runtime11.0.0.
+It preserves the synthetic contracts, saved receipt bytes, schemas and algorithms.
+Microsoft.Data.Sqlite10.0.15 and SQLitePCLRaw2.1.13 remain pinned.
+The refresh is prepared source only: no11 build, native qualification or published
+package exists yet. Lock regeneration and the existing Windows/Linux checks await
+the admitted SDK and the reviewed per-project execution/resource contract.
+The .NET11 x86-64-v2 CPU floor and actual native SQLite closure need qualification;
+existing x64 package results are not evidence for this new target.
+No speed, quality or security improvement is inferred from the version change.
+See the [maintenance note](docs/RELEASE-v0.1.0-preview.3.md).
+
+The ready downloads and native evidence below still select the immutable .NET10
+preview.2. There are no preview.3 download links until actual signed publication.
+
 ## Complete discrepancy reports: 0.1.0-preview.2
 
 The current preview adds complete per-row discrepancy details to standalone
@@ -138,10 +154,14 @@ timeout or report failure. A missing report after response loss is not success.
 
 ## Build and reproduce
 
-Requires .NET SDK10.0.404 and Python3.12 for packaging. Dependencies are locked:
-Microsoft.Data.Sqlite10.0.15, SQLitePCLRaw2.1.13 and resolved transitive packages;
-runtime10.0.15. CI uses matching Windows/Ubuntu builds, tests actual extracted
-archives and aggregates those same archives without rebuilding them.
+This source candidate selects .NET SDK11.0.100, C#15 and runtime11.0.0;
+Python3.12 is used for packaging. Microsoft.Data.Sqlite10.0.15 and SQLitePCLRaw2.1.13
+remain frozen. The tracked net10 locks have deliberately not been regenerated in
+this source-only stage. The commands below are the later qualification route,
+not commands to run before SDK admission, reviewed net11 locks and actual resource
+containment. Existing native and extracted-package checks remain required.
+The published preview.2 reproduction baseline remains SDK10.0.404/runtime10.0.15
+at its immutable tag; do not use this source candidate to reproduce those bytes.
 
 ```sh
 dotnet restore tests/Ledger.Tests --locked-mode
@@ -195,3 +215,47 @@ The immutable [previous preview v0.1.0-preview.1](https://github.com/pouriajamal
 retains its original runtime/provider 10.0.14 and SDK 10.0.403 reproduction baseline.
 Its exact [frozen source f137244914e8b392fffab386756fa12eb43f00f1](https://github.com/pouriajamali/financial-reconciliation-ledger/tree/f137244914e8b392fffab386756fa12eb43f00f1)
 and existing assets, checksums, signatures and tags remain unchanged.
+
+
+### Supported CI input route â€” inert integration candidate
+
+The proposed route uses the identical producer04 `tools/check_dotnet11.py`
+callable `transport(rid, directory, context)` and its shared normal catalog.
+Transport executes in the current own controller's main nonroot worker, after
+an actual SIGSTOP/pidfd membership observation and release. It returns input
+bytes and a typed receipt; the caller retains every native, product and delivery gate.
+The immutable Linux producer fact `757abf2dâ€¦` and acceptance `0452e1f3â€¦`
+prove only their original producer host/run. Windows normal input remains
+`DENIED_NO_ACCEPTED_PRODUCER_FACT`; global `SDK_READY` remains false.
+
+The proposed tracked `tools/ci/PROFILE.json` keeps this project's2GiB/2CPU,
+Linux64-task/swap0 and Windows32-process allocations. The original two900s
+verify rows, max-parallel1, scenarios, lock requirements, notices, signatures
+and artifact/retention limits remain. The callable receives the original
+absolute monotonic row deadline, with a stricter150s materialization/native
+prerequisite alarm; it receives no fresh row budget.
+
+`docs/SDK11-OWN-ROUTE-CONTRACT.json`, the exact controller/profile bytes and
+`docs/SDK11-SOURCE-PINS.json` bind the own source. The source table lists every
+projected tracked blob except itself; it is a pre-commit projection until the
+consolidated exact-source gate verifies the actual committed tree. The frozen
+`urn:pouria:dotnet11-host-qualification:v1#/$defs/consumerAdmission` uses current
+GITHUB_JOB/RUNNER_NAME/attempt and the actual own held-evidence digest. These
+identifiers need not equal immutable producer `qualifiedOn` identifiers.
+
+This candidate has not been applied or run on either CI host. The existing
+verify step fails closed without an externally provisioned, hash-bound own
+admission (`FRL01_CI_ADMISSION_PATH` and `FRL01_CI_ADMISSION_SHA256`). That input
+must come from the consolidated source/runtime gate; this branch does not fetch
+or manufacture one. Sealed net11/RID locks, actual native closure, original
+Windows144/Linux145 regressions,22 extracted checks and14 compatibility
+scenarios, terminal proof and public delivery still require their existing gates.
+Only the new owner-value SDK0 fixture is eligible for a bounded source-stage
+check; it imports no shared transport and executes no SDK/network/native target.
+
+The proposed fixed nonroot `ExecStopPost` observer records the actual service
+exit cause and remaining population before automatic unit/cgroup collection.
+The parent still requires the retained worker pidfd to be terminal and actual
+zero population (or the same group absent only after that durable stop cause).
+No missing-state fallback alone grants terminality; no root cleanup or repair
+is introduced. This source route still needs its actual-host gate.

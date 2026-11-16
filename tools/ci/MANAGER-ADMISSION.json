@@ -1,0 +1,198 @@
+{
+  "schema": "frl01-ci-consumer-admission/v1",
+  "state": "PENDING_ACTUAL_PRODUCER_FACT_AND_EXACT_SOURCE_INPUT_HOST_GATE",
+  "projectId": "01",
+  "designGateSha256": "9b3e0f376c5381b623f6a0f007bf6a6bb44f3dcbd1c2e4654de949a1eb97eec8",
+  "priorControlAdmissionPreimageSha256": "a76588dd69845274e7fdd5789e25794d6cbfffc86a33fb69f7c57843015bc03b",
+  "canonicalProtocolSha256": "9120ca49a0d46673053aa0ec0cdbbc6f00731d71ea0b57ddab09e8fc3ac3ac8b",
+  "contractSha256": "a680c2d0cca7be2d813c6ef8d2e79668a4f75166f61bd08da28cad735a8fc55c",
+  "profileSha256": "2dd04fd545ceebe44735f278310c6a2e77e36c3f584c1785fc9bd9df86588909",
+  "sources": {
+    "guardSha256": "8580e5017d99b372c41d650ab9db870cba5660df31d0f915ae2150248fce6fba",
+    "controllerSha256": "d4c7bb0056fa8648e9174bee8a38f1393f7e7584b42e99cc704ca88ea070292e",
+    "pipelineSha256": "42a24621f4f810f6ab494a23ccc2fbf14cf00d034822849bda9965cf4636b78c",
+    "kernelSha256": "9ecc6d75f04e2fe1e2890a5599112d9d34e8d44c8ad4abeeea9e4c64e382b200",
+    "newTestSha256": "aaacd7581ea3f212ab9c17d645fc927ebc40373a2bd0d7dfeeed4f3ffd9a8326",
+    "newFixtureSha256": "9fa312df024c785f7d16e8c9b19e979408dc4ba949b7edeb812a98fff9ad0f0d",
+    "compatibilitySha256": "ef1d108370eaa441f8f03d68d2153c1e588abc7007764f2a6b9466a8a0b6f8ab",
+    "newNormalTestSha256": "c2c3e90cdf8cc3c33d1df36a1556c4072acec8a02fa8ea1daeb91739fd0dae13",
+    "normalModuleSha256": "d9c690d8c82825b018c04089c279036829d3baf2534c2634bba84910c415a37d",
+    "normalCatalogSha256": "686c6c778f7841e6015fa401f3892b853df80e3341fbb5d02b27c682887c1c78"
+  },
+  "currentCpuObservation": null,
+  "routes": {
+    "GitHubHostedWindowsServer2025x64": {
+      "status": "DENIED_NO_ACCEPTED_PRODUCER_FACT",
+      "projectId": "01",
+      "rid": "win-x64",
+      "admittedFor": {
+        "hostClass": "GitHubHostedWindowsServer2025x64",
+        "rid": "win-x64",
+        "sdk": "11.0.100",
+        "runtime": "11.0.0",
+        "memberManifestSha256": null,
+        "contractSha256": null,
+        "sourcePinTableSha256": null,
+        "controllerSha256": null,
+        "profileSha256": null
+      },
+      "producerFact": null,
+      "producerAcceptance": null,
+      "sourceCommit": null,
+      "sourceTree": null,
+      "archive": null,
+      "acceptedCatalog": null
+    },
+    "GitHubHostedUbuntu24.04x64": {
+      "status": "PENDING_OWN_EXACT_SOURCE_PROFILE_AND_HELD_EVIDENCE_GATE",
+      "projectId": "01",
+      "rid": "linux-x64",
+      "admittedFor": {
+        "hostClass": "GitHubHostedUbuntu24.04x64",
+        "rid": "linux-x64",
+        "sdk": "11.0.100",
+        "runtime": "11.0.0",
+        "memberManifestSha256": "d411111d23492b4d101dd62851d1d1fedf3a4badc057d999aedc155ae4cc103a",
+        "contractSha256": "a680c2d0cca7be2d813c6ef8d2e79668a4f75166f61bd08da28cad735a8fc55c",
+        "sourcePinTableSha256": null,
+        "controllerSha256": "d4c7bb0056fa8648e9174bee8a38f1393f7e7584b42e99cc704ca88ea070292e",
+        "profileSha256": "2dd04fd545ceebe44735f278310c6a2e77e36c3f584c1785fc9bd9df86588909"
+      },
+      "producerFact": null,
+      "producerAcceptance": null,
+      "sourceCommit": null,
+      "sourceTree": null,
+      "archive": {
+        "url": "https://builds.dotnet.microsoft.com/dotnet/Sdk/11.0.100/dotnet-sdk-11.0.100-linux-x64.tar.gz",
+        "bytes": 211463422,
+        "sha512": "1bec9cca2ec689b1e80245b84f2b53c9441d1aa6daccf2ceb27490768bffa95954fa585bd275def31069d874d543d9ba9e6591fe9ade2dbd9f34ec5c0fd0050c",
+        "httpStatus": 200,
+        "contentLength": 211463422,
+        "redirects": 0,
+        "contentEncoding": "identity"
+      },
+      "producerQualifiedOn": {
+        "hostClass": "GitHubHostedUbuntu24.04x64",
+        "rid": "linux-x64",
+        "imageOS": "ubuntu24",
+        "imageVersion": "20261111.370.1",
+        "runId": "43920284996",
+        "job": "verify",
+        "attempt": "1",
+        "repository": "pouriajamali/data-admission-gate",
+        "architecture": "x64",
+        "instanceId": "GitHub Actions 1000002308",
+        "osVersion": "Ubuntu 24.04",
+        "kernelBuild": "7.0.0-1017-azure",
+        "uid": 1001,
+        "gid": 1001
+      },
+      "producerSourceReference": {
+        "fact": {
+          "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\sdk11-normal\\accepted-linux-fact.json.txt",
+          "bytes": 44582,
+          "sha256": "757abf2d3dde65d10cd895cfc97eaeccb7fc11e8685b94ad046e6a8ec8829007"
+        },
+        "acceptance": {
+          "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\sdk11-normal\\accepted-linux-acceptance.json.txt",
+          "bytes": 16013,
+          "sha256": "0452e1f3b4f2662d57e9b273428bb37ab0c5a733551a92394ca2a4e8b9b4ac08"
+        },
+        "normalCatalog": {
+          "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\sdk11-normal-inputs.lock.json.txt",
+          "bytes": 6535366,
+          "sha256": "686c6c778f7841e6015fa401f3892b853df80e3341fbb5d02b27c682887c1c78"
+        }
+      },
+      "normalCatalog": null
+    }
+  },
+  "allRequiredForFinalDelivery": [
+    "win-x64",
+    "linux-x64",
+    "all original regressions/negative/native package/compatibility/audit/notice/signature/public gates"
+  ],
+  "actualFactBindingAbsent": true,
+  "permission": "Source-only binding references real producer Linux history; all current own runtime bindings remain pending/null. No source interface or profile state authorizes execution.",
+  "fixtureExecutionPlan": {
+    "newCases": 26,
+    "execCountAggregate": 1,
+    "executor": "First independently admitted CI RID can run once under own caps; identity-bound results reusable by the other RID. No dependence on which RID qualifies first.",
+    "maxSeconds": 40,
+    "maxInputBytes": 32768,
+    "maxOutputBytes": 32768,
+    "SDKLaunches": 0,
+    "executedNow": false
+  },
+  "producerHostFactInterface": {
+    "schemaId": "urn:pouria:dotnet11-host-qualification:v1",
+    "consumerDefinition": "#/$defs/consumerAdmission",
+    "schemaBinding": {
+      "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\dotnet11-host-qualification.schema.json.txt",
+      "sha256": "63e04fa5d270c87b93e6e1f4c38bfbcf336b950b39fe1854dc4e514f0661f14c"
+    },
+    "state": "FROZEN_SHARED_SOURCE_INTERFACE_ONLY_NO_OWN_RUNTIME_ADMISSION"
+  },
+  "sourcePinTable": null,
+  "sharedNormalInterface": {
+    "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\INTERFACE.json",
+    "sha256": "7758af794c41c5caf6a567283e479a826b53b93511d1f6704fcd040121cb78a5",
+    "candidate": {
+      "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\CANDIDATE.json",
+      "sha256": "d76a111eb930f3bc5679ded826bd6626d69feae4700ec3b615272bd197546d82"
+    },
+    "identity": {
+      "normalModule": {
+        "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\check_dotnet11.py.txt",
+        "bytes": 36292,
+        "sha256": "d9c690d8c82825b018c04089c279036829d3baf2534c2634bba84910c415a37d"
+      },
+      "normalCatalog": {
+        "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\sdk11-normal-inputs.lock.json.txt",
+        "bytes": 6535366,
+        "sha256": "686c6c778f7841e6015fa401f3892b853df80e3341fbb5d02b27c682887c1c78"
+      },
+      "frozenSchema": {
+        "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\dotnet11-host-qualification.schema.json.txt",
+        "bytes": 29111,
+        "sha256": "63e04fa5d270c87b93e6e1f4c38bfbcf336b950b39fe1854dc4e514f0661f14c"
+      },
+      "acceptedLinuxFact": {
+        "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\sdk11-normal\\accepted-linux-fact.json.txt",
+        "bytes": 44582,
+        "sha256": "757abf2d3dde65d10cd895cfc97eaeccb7fc11e8685b94ad046e6a8ec8829007"
+      },
+      "acceptedLinuxAuthority": {
+        "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\sdk11-normal\\accepted-linux-acceptance.json.txt",
+        "bytes": 16013,
+        "sha256": "0452e1f3b4f2662d57e9b273428bb37ab0c5a733551a92394ca2a4e8b9b4ac08"
+      },
+      "byteIdenticalGuard": {
+        "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\qualification_input_guard.py.txt",
+        "bytes": 10157,
+        "sha256": "7420b08d78d3b1476be41385d179a42212a2a7e1a965a8d8ea3b67bb14da7925"
+      },
+      "byteIdenticalMaterializer": {
+        "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\materialize_qualification_linux.py.txt",
+        "bytes": 8094,
+        "sha256": "5f0dbb951cbe615d8c6dd9edbb63b11143cc457319bdcc9000ea9a486f660fb8"
+      },
+      "proofAttributes": {
+        "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\sdk11-normal\\.gitattributes.txt",
+        "bytes": 68,
+        "sha256": "f2fe153ebc992e87b4c933eb9b28bcf862fccb814c3e3bbe920239ee95b34360"
+      }
+    }
+  },
+  "ownContract": null,
+  "parentAmendedContractSha256": "142dac81ae7f6e05f52319d3521d4825d5df028e37542b7623d16316ff7dd077",
+  "ownRuntimeAdmissionAbsent": true,
+  "producerLinuxFactAvailableForItsOwnScope": true,
+  "normalFixtureExecuted": {
+    "cases": 16,
+    "scope": "PURE_NEW_OWNER_VALUES_ONLY",
+    "SDKLaunches": 0,
+    "nativeTargets": 0,
+    "networkAttempts": 0
+  }
+}

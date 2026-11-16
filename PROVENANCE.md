@@ -145,3 +145,12 @@ Do not normalize/edit the downloaded checksum file before verification. A valid
 signature over different bytes or a matching hash for another filename does not
 verify the chosen archive. Preserve failures and obtain a trusted copy rather
 than skipping a failed signature or fingerprint check.
+
+## Source-only preview.3 maintenance
+
+The net11/C#15 refresh is not a signed or published release yet. This guide's
+existing preview.2 tag, hashes, public key, download and CI identities remain the
+published verification subject. No new checksum, native manifest or signature is
+supplied as a substitute for missing runtime qualification. Preview.3 may be added
+only after exact source/native/archive review, the known-key signed release route
+and actual public download verification; old assets/tags/signatures stay immutable.

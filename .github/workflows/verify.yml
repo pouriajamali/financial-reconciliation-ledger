@@ -38,13 +38,15 @@ jobs:
       - name: Check actual workflow syntax and expressions
         run: python3 .github/ci/policy.py lint
   verify:
+    name: Guarded native ${{ matrix.rid }}
     needs: ci_policy
     if: needs.ci_policy.outputs.native == 'true'
     strategy:
+      fail-fast: false
       max-parallel: 1
       matrix:
         include:
-          - os: windows-latest
+          - os: windows-2025
             rid: win-x64
           - os: ubuntu-24.04
             rid: linux-x64
@@ -52,35 +54,17 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.404'
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Locked journal regressions and owned process interruption cases
+      - name: Exact typed host fact and own controlled native stages
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          dotnet restore tests/Ledger.Tests --locked-mode
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet run --project tests/Ledger.Tests -c Release --no-restore -- --work artifacts/tests
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Build clean exact-commit distributable
-        run: python tools/package.py --rid ${{ matrix.rid }} --commit ${{ github.sha }} --work artifacts/build --out artifacts/delivery
-      - name: Extract the actual archive
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Path 'artifacts/extracted with spaces' -ErrorAction Stop | Out-Null
-          $archive = Get-ChildItem -LiteralPath artifacts/delivery -File
-          if (@($archive).Count -ne 1) { throw 'Exactly one archive expected' }
-          if ($IsWindows) { Expand-Archive -LiteralPath $archive.FullName -DestinationPath 'artifacts/extracted with spaces' }
-          else { tar -xzf $archive.FullName -C 'artifacts/extracted with spaces'; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
-      - name: Execute own extracted apphost with synthetic books
-        shell: pwsh
-        run: |
-          $package = Get-ChildItem -LiteralPath 'artifacts/extracted with spaces' -Directory
-          if (@($package).Count -ne 1) { throw 'Exactly one package root expected' }
-          python tools/check_package.py --package $package.FullName --work 'artifacts/package checks with spaces' --commit '${{ github.sha }}'
+          $python = if ($IsWindows) { (Get-Command python -CommandType Application -ErrorAction Stop).Source } else { '/usr/bin/python3' }
+          $admission = $env:FRL01_CI_ADMISSION_PATH
+          $hash = $env:FRL01_CI_ADMISSION_SHA256
+          if (-not $admission -or $hash -notmatch '^[0-9a-f]{64}$') { throw 'HOLD: exact external own admission is absent' }
+          if ((Get-FileHash -LiteralPath $admission -Algorithm SHA256).Hash.ToLowerInvariant() -ne $hash) { throw 'HOLD: own admission hash differs' }
+          & $python -I -B tools/ci/ci_host_controller.py --mode product-ci --admission $admission --admission-sha256 $hash --profile tools/ci/PROFILE.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
@@ -94,6 +78,7 @@ jobs:
           retention-days: ${{ (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch') && 7 || 3 }}
           name: proof-${{ matrix.rid }}
           path: |
+            artifacts/host-proof/*.json
             artifacts/tests/receipt.json
             artifacts/build/archive.json
             artifacts/package checks with spaces/receipt.json
@@ -124,4 +109,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
-        run: gh release create "$RELEASE_TAG" artifacts/release/* --verify-tag --prerelease --title "$RELEASE_TAG — Financial Reconciliation Ledger" --notes-file docs/RELEASE-v0.1.0-preview.2.md
+        run: gh release create "$RELEASE_TAG" artifacts/release/* --verify-tag --prerelease --title "$RELEASE_TAG — Financial Reconciliation Ledger" --notes-file docs/RELEASE-v0.1.0-preview.3.md

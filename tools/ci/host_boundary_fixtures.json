@@ -1,0 +1,320 @@
+{
+  "schema": "frl01-sdk0-host-boundary-model-fixtures/v1",
+  "fixtureOnly": true,
+  "runtimeAuthority": false,
+  "sdkLaunches": 0,
+  "baselineModel": {
+    "fact": {
+      "schema": "sdk11-host-qualification/v1",
+      "qualifiedOn": {
+        "hostClass": "GitHubHostedWindowsServer2025x64",
+        "runId": "101",
+        "imageVersion": "PRODUCER_TEST_IMAGE",
+        "rid": "win-x64",
+        "job": "verify",
+        "attempt": "1",
+        "instanceId": "MODEL_PRODUCER_INSTANCE",
+        "repository": "pouriajamali/data-admission-gate"
+      },
+      "outcome": "NATIVE_HOST_QUALIFICATION_OBSERVED",
+      "toolchain": {
+        "sdk": "11.0.100",
+        "runtime": "11.0.0"
+      },
+      "factType": "WindowsCIServer2025RID",
+      "archive": {
+        "fixtureIdentity": "MODEL_ONLY_NOT_SDK_BYTES"
+      },
+      "tree": {
+        "memberManifestSha256": "MODEL_MEMBER_NOT_A_HASH"
+      },
+      "_projectionOnly": true
+    },
+    "acceptance": {
+      "runId": 101,
+      "jobs": [
+        {
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "route": {
+      "status": "ADMITTED",
+      "projectId": "01",
+      "rid": "win-x64",
+      "admittedFor": {
+        "hostClass": "GitHubHostedWindowsServer2025x64",
+        "rid": "win-x64",
+        "sdk": "11.0.100",
+        "runtime": "11.0.0",
+        "memberManifestSha256": "MODEL_MEMBER_NOT_A_HASH",
+        "sourcePinTableSha256": "MODEL_SOURCE_PIN_TABLE",
+        "contractSha256": "MODEL_CONTRACT",
+        "controllerSha256": "MODEL_CONTROLLER",
+        "profileSha256": "MODEL_PROFILE"
+      },
+      "sourceCommit": "MODEL_SOURCE",
+      "sourceTree": "MODEL_TREE",
+      "archive": {
+        "fixtureIdentity": "MODEL_ONLY_NOT_SDK_BYTES"
+      },
+      "producerQualifiedOn": {
+        "hostClass": "GitHubHostedWindowsServer2025x64",
+        "runId": "101",
+        "imageVersion": "PRODUCER_TEST_IMAGE",
+        "rid": "win-x64",
+        "job": "verify",
+        "attempt": "1",
+        "instanceId": "MODEL_PRODUCER_INSTANCE",
+        "repository": "pouriajamali/data-admission-gate"
+      }
+    },
+    "own": {
+      "projectId": "01",
+      "hostClass": "GitHubHostedWindowsServer2025x64",
+      "rid": "win-x64",
+      "runnerEnvironment": "github-hosted",
+      "imageOS": "win25",
+      "imageVersion": "DIFFERENT_CURRENT_TEST_IMAGE",
+      "machine": "x86_64",
+      "container": false,
+      "wsl": false,
+      "actualOSAccepted": true,
+      "sourceCommit": "MODEL_SOURCE",
+      "sourceTree": "MODEL_TREE",
+      "dirty": false,
+      "contractSha256": "MODEL_CONTRACT",
+      "controllerSha256": "MODEL_CONTROLLER",
+      "profileSha256": "MODEL_PROFILE",
+      "cpuV2": true,
+      "runId": "301",
+      "jobId": "401",
+      "runAttempt": "2",
+      "runnerName": "MODEL_CURRENT_RUNNER",
+      "instanceIdentity": "MODEL_CURRENT_INSTANCE",
+      "sourcePinTableSha256": "MODEL_SOURCE_PIN_TABLE"
+    }
+  },
+  "cases": [
+    {
+      "id": "A01_DIFFERENT_PRODUCER_CONSUMER_JOB_ALLOWED",
+      "mutation": null,
+      "expect": "ALLOW_MODEL_ONLY"
+    },
+    {
+      "id": "A02_DIFFERENT_IMAGE_PATCH_WITHIN_CLASS_ALLOWED",
+      "mutation": [
+        "own.imageVersion",
+        "ANOTHER_CURRENT_TEST_IMAGE"
+      ],
+      "expect": "ALLOW_MODEL_ONLY"
+    },
+    {
+      "id": "D01",
+      "mutation": [
+        "fact.outcome",
+        "REVIEWED_TYPED_ARCHIVE_INPUT_NOT_EXECUTED"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D02",
+      "mutation": [
+        "fact.qualifiedOn.repository",
+        "MODEL_OTHER_REPOSITORY"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D03",
+      "mutation": [
+        "fact.toolchain.sdk",
+        "10.0.404"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D04",
+      "mutation": [
+        "fact.toolchain.runtime",
+        "10.0.15"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D05",
+      "mutation": [
+        "own.hostClass",
+        "WindowsLocal26H2"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D06",
+      "mutation": [
+        "own.rid",
+        "linux-x64"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D07",
+      "mutation": [
+        "fact.qualifiedOn.rid",
+        "linux-x64"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D08",
+      "mutation": [
+        "route.status",
+        "PENDING"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D09",
+      "mutation": [
+        "route.admittedFor.hostClass",
+        "GitHubHostedUbuntu24.04x64"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D10",
+      "mutation": [
+        "fact.qualifiedOn.instanceId",
+        "MUTATED_PRODUCER_JOB"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D11",
+      "mutation": [
+        "fact.qualifiedOn.hostClass",
+        "LinuxLocalUbuntu24"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D12",
+      "mutation": [
+        "acceptance.jobs",
+        [
+          {
+            "status": "in_progress",
+            "conclusion": null
+          }
+        ]
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D13",
+      "mutation": [
+        "acceptance.runId",
+        999
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D14",
+      "mutation": [
+        "route.archive",
+        {
+          "wrong": "identity"
+        }
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D15",
+      "mutation": [
+        "own.runnerEnvironment",
+        "self-hosted"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D16",
+      "mutation": [
+        "own.imageOS",
+        "win26"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D17",
+      "mutation": [
+        "own.machine",
+        "arm64"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D18",
+      "mutation": [
+        "own.container",
+        true
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D19",
+      "mutation": [
+        "own.wsl",
+        true
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D20",
+      "mutation": [
+        "own.actualOSAccepted",
+        false
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D21",
+      "mutation": [
+        "own.sourceCommit",
+        "WRONG_SOURCE"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D22",
+      "mutation": [
+        "own.sourceTree",
+        "WRONG_TREE"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D23",
+      "mutation": [
+        "own.dirty",
+        true
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    },
+    {
+      "id": "D24",
+      "mutation": [
+        "own.controllerSha256",
+        "WRONG_CONTROL"
+      ],
+      "expect": "DENY_MODEL_ONLY"
+    }
+  ],
+  "counts": {
+    "modelAccept": 2,
+    "newDenials": 24,
+    "total": 26
+  },
+  "boundary": "Symbolic MODEL_* values exercise only pure model semantics. They are not hashes, archive/native facts, accepted real producers or runtime admissions. Never pass this file to a production gate.",
+  "scope": "PARTIAL_MODEL_PROJECTIONS_ONLY: deliberately invalid full canonical fact, missing required native evidence and containing _projectionOnly. Never validate these as a real fact or pass to runtime bound(). No PASS fact produced."
+}
