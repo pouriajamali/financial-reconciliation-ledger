@@ -352,6 +352,36 @@ def main():
         # No local lane reset, service repair/root shell, alternate host or fallback.
     return 0
 
+def typed_worker_cause(error):
+    kind=type(error).__name__;kind=kind if kind.isascii() and kind.isidentifier() and len(kind)<=64 else 'UNKNOWN'
+    value={'schema':'frl01-typed-worker-cause/v1','state':'CAUSE_ONLY_NOT_ADMISSION','exceptionType':kind,'code':'DETAIL_REDACTED','missingIdentifier':None,'errno':None,'frames':[],'normalInputCleanup':None}
+    code=str(error)
+    if type(error) in (RuntimeError,ValueError) and 0<len(code)<=128 and all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:.-' for c in code):value['code']=code
+    identifier=error.args[0] if type(error) is KeyError and len(error.args)==1 else getattr(error,'name',None) if type(error) is NameError else None
+    if type(identifier) is str and identifier.isascii() and identifier.isidentifier() and len(identifier)<=64:value['missingIdentifier']=identifier
+    number=getattr(error,'winerror',getattr(error,'errno',None))
+    if type(number) is int and 0<=number<=4294967295:value['errno']=number
+    tb=error.__traceback__;checkout=HERE.parent.parent
+    while tb is not None:
+        path=Path(tb.tb_frame.f_code.co_filename)
+        if path.is_absolute() and path.is_relative_to(checkout):
+            name=tb.tb_frame.f_code.co_name
+            if len(name)<=80 and all(c.isascii() and (c.isalnum() or c in '_<>') for c in name):value['frames'].append({'module':path.relative_to(checkout).as_posix(),'function':name,'line':tb.tb_lineno})
+        tb=tb.tb_next
+    value['frames']=value['frames'][-12:]
+    cleanup=getattr(error,'normalInputCleanup',None)
+    if type(cleanup) is dict and cleanup.get('state') in ('NO_ALLOCATION','OWN_FRESH_ALLOCATION_REMOVED','UNKNOWN_OR_DEADLINE_PARTIAL_RETAINED') and type(cleanup.get('allocationCreated')) is bool:value['normalInputCleanup']={'state':cleanup['state'],'allocationCreated':cleanup['allocationCreated']}
+    need(len(json.dumps(value,separators=(',',':')).encode())<=8192,'TYPED_WORKER_CAUSE_BOUND');return value
+
+
+def record_typed_worker_cause(error):
+    if '--worker' not in sys.argv or '--root' not in sys.argv:return
+    root=Path(sys.argv[sys.argv.index('--root')+1]).resolve();temp=Path(os.environ['RUNNER_TEMP']).resolve()
+    need(root.parent==temp and root.name.startswith('frl01-') and (root/'proof').is_dir(),'OWN_FAILURE_CAUSE_SCOPE')
+    write(root/'proof/worker-cause.json',typed_worker_cause(error))
+
 if __name__=='__main__':
     try:raise SystemExit(own_stop_observer(Path(sys.argv[2]),Path(sys.argv[3])) if len(sys.argv)==4 and sys.argv[1]=='--own-stop-observer' else main())
-    except Exception as error:print(json.dumps({'state':'HOLD','reason':str(error)}),file=sys.stderr);raise SystemExit(3)
+    except Exception as error:
+        record_typed_worker_cause(error)
+        print(json.dumps({'state':'HOLD','reason':str(error)}),file=sys.stderr);raise SystemExit(3)

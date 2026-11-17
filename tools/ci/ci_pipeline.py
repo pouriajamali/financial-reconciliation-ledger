@@ -239,7 +239,9 @@ def windows_native_prerequisites(sdk,checkout,env,proof,deadline):
 def input_only(route,context,root,proof,deadline,normal,normal_context,normal_directory):
     need(context['rid']=='win-x64','OWN_WINDOWS_INPUT_ONLY_SCOPE');env=sdk_environment(root)
     with stage_alarm(150,deadline,normal,normal_context):
+        (proof/'windows-input-stage.json').write_text(json.dumps({'schema':'frl01-own-input-stage/v1','stage':'BEFORE_SHARED_TRANSPORT','SDKExecutions':0}),encoding='utf-8')
         sdk,receipt=normal.transport('win-x64',normal_directory,normal_context);validate_normal_receipt(receipt,context,normal_context)
+        (proof/'windows-input-stage.json').write_text(json.dumps({'schema':'frl01-own-input-stage/v1','stage':'BEFORE_OWN_NATIVE_PREREQUISITES','SDKExecutions':0}),encoding='utf-8')
         records=native_prerequisites(sdk,Path(context['checkout']),env,proof,deadline)
     value={'schema':'frl01-current-consumer-input-only/v1','state':'OWN_CURRENT_WINDOWS_INPUT_AND_NATIVE_PREREQUISITES_OBSERVED_NO_SDK_TARGET','sourceCommit':context['sourceCommit'],'sourceTree':context['sourceTree'],'normalInput':receipt,'records':records,'SDKExecutions':0,'NugetPackageAdmission':False,'productAdmission':False}
     raw=json.dumps(value,separators=(',',':')).encode();need(len(raw)<=2097152,'OWN_INPUT_ONLY_PROOF_BOUND');(proof/'input-only.json').write_bytes(raw);return value
