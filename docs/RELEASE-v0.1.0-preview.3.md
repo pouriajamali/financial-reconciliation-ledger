@@ -48,3 +48,5 @@ provided as an admission artifact.
 The required Windows producer host fact is now observed in run44083510897/source86dcda2c (eight fixed commands exit0, owned processes0). It is immutable host history, not this product's2GiB/CPU2/32-process admission or a product test/release. Shared Windows normal transport and exact owner input/held-runtime admission remain pending; preview.3 has no download yet.
 
 The original input-graph allocation is wired to the existing controlled CI row with exact external admission provisioning. Six SDK data commands precede graph-specific input acquisition and lock sealing; their execution result remains pending. This adds no workflow/job/artifact/cache, global readiness, package upgrade or product acceptance.
+
+Exact common source4dab824 and its62 shared files are integrated. The unchanged public API now covers both accepted SDK host histories. This source composition alone does not admit the product's graph/locks/native dependencies or imply successful product CI/release.

@@ -5,19 +5,19 @@
   "designGateSha256": "9b3e0f376c5381b623f6a0f007bf6a6bb44f3dcbd1c2e4654de949a1eb97eec8",
   "priorControlAdmissionPreimageSha256": "a76588dd69845274e7fdd5789e25794d6cbfffc86a33fb69f7c57843015bc03b",
   "canonicalProtocolSha256": "9120ca49a0d46673053aa0ec0cdbbc6f00731d71ea0b57ddab09e8fc3ac3ac8b",
-  "contractSha256": "548f21275e5abaecba11ee1003186f70bd161c80f2446bb5dba19d960e10d008",
+  "contractSha256": "8bf90230dbeb70c46080e5967dbf50b74b10810a474bdddd251de8012e2a24bd",
   "profileSha256": "2dd04fd545ceebe44735f278310c6a2e77e36c3f584c1785fc9bd9df86588909",
   "sources": {
-    "guardSha256": "967a9e208c9ab6607283f3809bdbe6387989ad11feb52a0b3899e26c399d7d9d",
-    "controllerSha256": "cdf7b2cbd8526c1d077c612d1c48a3ec8fed642c4edd01848855eb36d4661d94",
-    "pipelineSha256": "9d00b7f9952f254379caf67f7974dda358a4981c8554213428f764a0f2570f84",
+    "guardSha256": "97720bcc61165bf7c435eeb20b0eb64e72a3a8f2f7f4271fc2a65e1ac19f9b96",
+    "controllerSha256": "1c1746819dfb200a426935b4d5dd9af93381485fabd168854b4862fbabc6f649",
+    "pipelineSha256": "67b492c61bf89a795598987227a1042a7786ff37f4128762d2251c63edc012b0",
     "kernelSha256": "9ecc6d75f04e2fe1e2890a5599112d9d34e8d44c8ad4abeeea9e4c64e382b200",
     "newTestSha256": "aaacd7581ea3f212ab9c17d645fc927ebc40373a2bd0d7dfeeed4f3ffd9a8326",
     "newFixtureSha256": "9fa312df024c785f7d16e8c9b19e979408dc4ba949b7edeb812a98fff9ad0f0d",
     "compatibilitySha256": "ef1d108370eaa441f8f03d68d2153c1e588abc7007764f2a6b9466a8a0b6f8ab",
     "newNormalTestSha256": "c2c3e90cdf8cc3c33d1df36a1556c4072acec8a02fa8ea1daeb91739fd0dae13",
-    "normalModuleSha256": "d9c690d8c82825b018c04089c279036829d3baf2534c2634bba84910c415a37d",
-    "normalCatalogSha256": "686c6c778f7841e6015fa401f3892b853df80e3341fbb5d02b27c682887c1c78"
+    "normalModuleSha256": "c37e2f48ee21ef1f02e4afb2bb1cd0af397781e487265c31e43fe06ea182befd",
+    "normalCatalogSha256": "8995a4d296afbfcdf8e267e1923a4de5365b7fa1ef58457add433dfb6df33e23"
   },
   "currentCpuObservation": null,
   "routes": {
@@ -111,7 +111,7 @@
         "normalCatalog": {
           "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\sdk11-normal-inputs.lock.json.txt",
           "bytes": 6535366,
-          "sha256": "686c6c778f7841e6015fa401f3892b853df80e3341fbb5d02b27c682887c1c78"
+          "sha256": "8995a4d296afbfcdf8e267e1923a4de5365b7fa1ef58457add433dfb6df33e23"
         }
       },
       "normalCatalog": null
@@ -155,12 +155,12 @@
       "normalModule": {
         "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\check_dotnet11.py.txt",
         "bytes": 36292,
-        "sha256": "d9c690d8c82825b018c04089c279036829d3baf2534c2634bba84910c415a37d"
+        "sha256": "c37e2f48ee21ef1f02e4afb2bb1cd0af397781e487265c31e43fe06ea182befd"
       },
       "normalCatalog": {
         "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\sdk11-normal-inputs.lock.json.txt",
         "bytes": 6535366,
-        "sha256": "686c6c778f7841e6015fa401f3892b853df80e3341fbb5d02b27c682887c1c78"
+        "sha256": "8995a4d296afbfcdf8e267e1923a4de5365b7fa1ef58457add433dfb6df33e23"
       },
       "frozenSchema": {
         "path": "E:\\Codex WorkSpace\\Git Projects\\data-admission-gate\\outputs\\tech-refresh-m0-20261114\\shared-normal-source-20261116\\postimages\\tools\\dotnet11-host-qualification.schema.json.txt",

@@ -20,13 +20,13 @@ def load(p):
 
 def module(name,path,expected):
     need(sha(path)==expected,'REVIEWED_SOURCE_BINDING')
-    spec=importlib.util.spec_from_file_location(name,path);value=importlib.util.module_from_spec(spec);spec.loader.exec_module(value);return value
+    spec=importlib.util.spec_from_file_location(name,path);value=importlib.util.module_from_spec(spec);sys.modules[name]=value;spec.loader.exec_module(value);return value
 
 def write(p,value):
     with p.open('x',encoding='utf-8',newline='\n') as f:json.dump(value,f,indent=2);f.write('\n');f.flush();os.fsync(f.fileno())
 
-NORMAL_MODULE_SHA='d9c690d8c82825b018c04089c279036829d3baf2534c2634bba84910c415a37d'
-NORMAL_CATALOG_SHA='686c6c778f7841e6015fa401f3892b853df80e3341fbb5d02b27c682887c1c78'
+NORMAL_MODULE_SHA='c37e2f48ee21ef1f02e4afb2bb1cd0af397781e487265c31e43fe06ea182befd'
+NORMAL_CATALOG_SHA='8995a4d296afbfcdf8e267e1923a4de5365b7fa1ef58457add433dfb6df33e23'
 OWN_REPOSITORY='pouriajamali/financial-reconciliation-ledger'
 
 def normal_values(own,files,clock,supervisor):

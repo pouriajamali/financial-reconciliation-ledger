@@ -12,8 +12,8 @@
     "sha256": "7758af794c41c5caf6a567283e479a826b53b93511d1f6704fcd040121cb78a5",
     "candidateSha256": "d76a111eb930f3bc5679ded826bd6626d69feae4700ec3b615272bd197546d82"
   },
-  "normalModuleSha256": "d9c690d8c82825b018c04089c279036829d3baf2534c2634bba84910c415a37d",
-  "normalCatalogSha256": "686c6c778f7841e6015fa401f3892b853df80e3341fbb5d02b27c682887c1c78",
+  "normalModuleSha256": "c37e2f48ee21ef1f02e4afb2bb1cd0af397781e487265c31e43fe06ea182befd",
+  "normalCatalogSha256": "8995a4d296afbfcdf8e267e1923a4de5365b7fa1ef58457add433dfb6df33e23",
   "frozenConsumerDefinition": "urn:pouria:dotnet11-host-qualification:v1#/$defs/consumerAdmission",
   "schemaSha256": "63e04fa5d270c87b93e6e1f4c38bfbcf336b950b39fe1854dc4e514f0661f14c",
   "limits": {
@@ -33,7 +33,13 @@
   },
   "clock": "One original row/bootstrap monotonic start and absolute end; held evidence, service hard deadline and callable context agree; no fresh deadline. Transport stage150s is a stricter inherited alarm inside the unchanged outer deadline.",
   "acceptance": "Original Windows144/Linux145 regressions,22 extracted checks and14 literal compatibility scenarios; existing locks/notices/signatures/advisories unchanged; full native prerequisite closure must pass before first SDK invocation.",
-  "readiness": "Linux fact757ab belongs only to producer04 historical run/instance. Current own exact source/profile/held route must be separately admitted. Windows normal DENIED. Global SDK_READY false.",
+  "readiness": "Both immutable producer SDK host facts are available via the one shared4dab API. Own current Linux/Windows source/profile/held runtime and graph/native/package admission remain independent. Windows consumer wiring is pending; global SDK_READY is false.",
   "execution": "Direct human owner authorized completing the upgrade on2026-11-17. Each actual controlled phase additionally requires exact externally supplied source/input/host admission, immutable producer evidence and independent own held kernel/deadline proof. This contract alone is not readiness or a manager approval.",
-  "inputGraphStage": "Only original phase1/2 six finite SDK data commands, sum30s, inside original100s lock slot and original900s controlled Linux row. No restore/acquisition/build/run/test/package or Windows-native claim. External dispatcher admission must bind exact signed source/tree; no new workflow/job/runner/artifact/cache or cap increase."
+  "inputGraphStage": "Only original phase1/2 six finite SDK data commands, sum30s, inside original100s lock slot and original900s controlled Linux row. No restore/acquisition/build/run/test/package or Windows-native claim. External dispatcher admission must bind exact signed source/tree; no new workflow/job/runner/artifact/cache or cap increase.",
+  "sharedFinalHandoff": {
+    "sourceHEAD": "4dab824c2b0b6fe00858f648d07fd8e9df9fafe1",
+    "sha256": "a5b406c91efacb40420e7549a2cc308db85b8e164bae4ba0b9d9b9dcd673ac13",
+    "interfaceSHA256": "eca0dd5cfe425623119aff5b05dcf70c881ce2c23414be48fb7a74920c2f89d9",
+    "nativeCatalogSHA256": "1f24dedfc1ff63c19948a3a9786431a3a3b888defbcff70fd3c4e8c827b3cdf4"
+  }
 }

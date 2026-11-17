@@ -102,7 +102,7 @@ def handshake(admission, own):
     need(fact['source']['schemaSha256']==INTERFACE_SHA,'PRODUCER_SCHEMA_SOURCE_BINDING')
     need(own['rid']=='linux-x64','WINDOWS_NORMAL_DENIED')
     need(route['producerFact']['sha256']=='757abf2d3dde65d10cd895cfc97eaeccb7fc11e8685b94ad046e6a8ec8829007' and route['producerAcceptance']['sha256']=='0452e1f3b4f2662d57e9b273428bb37ab0c5a733551a92394ca2a4e8b9b4ac08','IMMUTABLE_REAL_PRODUCER_PAIR')
-    need(route['normalCatalog']['sha256']=='686c6c778f7841e6015fa401f3892b853df80e3341fbb5d02b27c682887c1c78' and digest(Path(route['normalCatalog']['path']))==route['normalCatalog']['sha256'],'IDENTICAL_SHARED_NORMAL_CATALOG')
+    need(route['normalCatalog']['sha256']=='8995a4d296afbfcdf8e267e1923a4de5365b7fa1ef58457add433dfb6df33e23' and digest(Path(route['normalCatalog']['path']))==route['normalCatalog']['sha256'],'IDENTICAL_SHARED_NORMAL_CATALOG')
     result=model(fact,acceptance,route,own);result['producerFactSha256']=route['producerFact']['sha256'];result['route']=route;return result
 
 def consumer_record(admission,own,held_sha256):
