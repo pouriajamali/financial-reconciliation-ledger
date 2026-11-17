@@ -14,11 +14,9 @@ identity proof. The key is public; never share or request the private signing ke
 
 ## Current preview and frozen source
 
-The examples below select [v0.1.0-preview.2](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.2),
-whose signed annotated tag is `55a88ef8bed94ac55d961f898f8544466917d5dd` and
-whose source commit is `68aaecf26e9cd87190445f936c6df660d67e6bc5`.
-[Exact-tag native CI](https://github.com/pouriajamali/financial-reconciliation-ledger/actions/runs/42880953244)
-built, extracted and executed Windows/Ubuntu archives from that commit.
+The examples select [v0.1.0-preview.3](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.3).
+Its signed annotated tag, native BUILD-MANIFEST.json and VALIDATION.json identify
+the exact source and local validation. Actions CI was not run by owner instruction.
 Commit/tag signatures, checksum signatures and OS binary signing are separate.
 
 Use the verification files from the same versioned release as the chosen archive.
@@ -34,12 +32,12 @@ remain available with their original checksums, signatures and source identity.
 
 ## What is signed
 
-The example below verifies **v0.1.0-preview.2**. Its
+The example below verifies **v0.1.0-preview.3**. Its
 `SHA256SUMS.txt.sig` is an SSH signature over the exact `SHA256SUMS.txt` bytes in
 the `file` namespace. Verify that signature first, then the chosen archive's hash.
 A matching unsigned hash alone is not authenticated provenance.
 
-Use the [release page](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.2)
+Use the [release page](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/v0.1.0-preview.3)
 and its exact tag/commit when selecting assets. An annotated signed tag and
 exact-source package manifests accompany public previews. Missing assets or a
 missing checksum signature are an incomplete publication; do not skip verification.
@@ -69,8 +67,8 @@ from the signed checksum file to verify a different OS archive.
 
 ```sh
 repo='pouriajamali/financial-reconciliation-ledger'
-tag='v0.1.0-preview.2'
-archive='financial-reconciliation-ledger-v0.1.0-preview.2-source.zip'
+tag='v0.1.0-preview.3'
+archive='financial-reconciliation-ledger-v0.1.0-preview.3-source.zip'
 for name in "$archive" SHA256SUMS.txt SHA256SUMS.txt.sig; do
   curl --fail --location --output "$name" "https://github.com/$repo/releases/download/$tag/$name" || exit 1
 done
@@ -101,8 +99,8 @@ These commands do not install tools or change security settings.
 ```powershell
 $ErrorActionPreference = 'Stop'
 $repo = 'pouriajamali/financial-reconciliation-ledger'
-$tag = 'v0.1.0-preview.2'
-$archive = 'financial-reconciliation-ledger-v0.1.0-preview.2-source.zip'
+$tag = 'v0.1.0-preview.3'
+$archive = 'financial-reconciliation-ledger-v0.1.0-preview.3-source.zip'
 foreach ($name in @($archive, 'SHA256SUMS.txt', 'SHA256SUMS.txt.sig')) {
     Invoke-WebRequest -Uri "https://github.com/$repo/releases/download/$tag/$name" -OutFile $name
 }
@@ -145,12 +143,3 @@ Do not normalize/edit the downloaded checksum file before verification. A valid
 signature over different bytes or a matching hash for another filename does not
 verify the chosen archive. Preserve failures and obtain a trusted copy rather
 than skipping a failed signature or fingerprint check.
-
-## Source-only preview.3 maintenance
-
-The net11/C#15 refresh is not a signed or published release yet. This guide's
-existing preview.2 tag, hashes, public key, download and CI identities remain the
-published verification subject. No new checksum, native manifest or signature is
-supplied as a substitute for missing runtime qualification. Preview.3 may be added
-only after exact source/native/archive review, the known-key signed release route
-and actual public download verification; old assets/tags/signatures stay immutable.

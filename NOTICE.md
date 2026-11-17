@@ -11,11 +11,9 @@ Double-entry bookkeeping, ID-based deduplication and atomic transactions are
 established public patterns. TigerBeetle and SQLite are referenced as existing
 baselines, with no endorsement, competitive benchmark or new-ledger invention claim.
 
-Microsoft.Data.Sqlite10.0.15 retains its MIT/package notices. The source-only
-preview.3 target is .NET runtime11.0.0; packaging must obtain and retain that actual
-runtime pack's MIT/third-party notice bytes before distribution. No11 runtime
-payload or notice-inventory qualification is claimed by this source preparation.
-Published preview.2 archives retain their original10.0.15 runtime notices.
+Microsoft.Data.Sqlite10.0.15 retains its MIT/package notices. Preview.3 bundles
+.NET runtime11.0.0 with that actual runtime pack's license and third-party notice
+bytes. Published preview.2 retains its original10.0.15 runtime notices.
 SQLitePCLRaw2.1.13 retains Apache-2.0/package notices; SQLite core is public domain.
 Bundled `licenses/` and `DEPENDENCIES.json` retain exact package identities, NuGet
 content hashes and license/copyright notices. Original MIT does not replace any

@@ -1,0 +1,183 @@
+{
+  "schema": "frl01-actual-native-runtime-inputs/v1",
+  "state": "ACTUAL_SDK_NUGET_SIGNATURES_AND_CONTENT_HASHES_VERIFIED",
+  "packages": [
+    {
+      "id": "microsoft.aspnetcore.app.runtime.linux-x64",
+      "version": "11.0.0",
+      "rawArchiveSha256": "3f4bdd1255f9ccf02a3ad22656e165bd86e9f0179f18d88cf0fc7de02b230593",
+      "bytes": 13048557,
+      "nugetContentHash": "yakDdyyMIIXJfCuuaGDt3lFQ/0J0SCISfvmZNQ0StQvG1scXFzfstv/JMFbeQgTM7xHbxAAwMeXz7gWI4s49YA==",
+      "authority": "Actual SDK11.0.100 nuget verify --all detailed Content hash; never the raw .nupkg.sha512 file",
+      "signatureVerification": {
+        "name": "native-nuget-verify-0",
+        "exit": 0,
+        "stdoutSha256": "c4dcc8ca3a289b121347df8bf51aea0a9aa195c520a21d598fe19c6128e2e52d",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "actualArgvSha256": "4f35210ebc5bbc24b37013c9d07a3f90c4338f300548cb0a01e3675082c7dc03",
+        "command": [
+          "<verified SDK11.0.100>",
+          "nuget",
+          "verify",
+          "--all",
+          "<exact nupkg identified above>",
+          "--verbosity",
+          "detailed"
+        ],
+        "pathRedaction": "Only local SDK/package paths are redacted; exact arguments and full command receipts are retained with private delivery evidence."
+      }
+    },
+    {
+      "id": "microsoft.aspnetcore.app.runtime.win-x64",
+      "version": "11.0.0",
+      "rawArchiveSha256": "b121c568f8a9f02ffc24d72c29063157ad489d97904acc2d06ea0bc220049f35",
+      "bytes": 13367527,
+      "nugetContentHash": "9C5d4MdoOMnvqiWgUSl3ScvXHB41XYMEpXLwrgZJOhQuD4ekSlBLVzj8wDVKTjL1OGQTYMCfcOys/7e+zny0yg==",
+      "authority": "Actual SDK11.0.100 nuget verify --all detailed Content hash; never the raw .nupkg.sha512 file",
+      "signatureVerification": {
+        "name": "native-nuget-verify-1",
+        "exit": 0,
+        "stdoutSha256": "e35e254d739274cff285348b3d3d835b0fd1acde9e0d69c7bb3664eb6bbd63d0",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "actualArgvSha256": "3116a340f7f8bbd588ae86325a58ce436d35c9936c891872f11791162f2cfd2f",
+        "command": [
+          "<verified SDK11.0.100>",
+          "nuget",
+          "verify",
+          "--all",
+          "<exact nupkg identified above>",
+          "--verbosity",
+          "detailed"
+        ],
+        "pathRedaction": "Only local SDK/package paths are redacted; exact arguments and full command receipts are retained with private delivery evidence."
+      }
+    },
+    {
+      "id": "microsoft.netcore.app.host.linux-x64",
+      "version": "11.0.0",
+      "rawArchiveSha256": "a152b2d7ebb7fb9431ab96490e4c35c86af564419c20d81745e71760a4465469",
+      "bytes": 5085644,
+      "nugetContentHash": "TDrPTaVbpOUJI6n1tFlcPsFrvRAasdzJB9ZrkVQ6yNqc1FazgwbzxSFZlB2xjZPen3chGd8zWYB63QSNfF9vbQ==",
+      "authority": "Actual SDK11.0.100 nuget verify --all detailed Content hash; never the raw .nupkg.sha512 file",
+      "signatureVerification": {
+        "name": "native-nuget-verify-2",
+        "exit": 0,
+        "stdoutSha256": "5395bae077b68400d61c1b0f576eae3f75417496d3bb5dc2e7486600845df412",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "actualArgvSha256": "3b4affa0124437c560afd102f164ae5dad15b651ef13dcd4f4d25415577e4391",
+        "command": [
+          "<verified SDK11.0.100>",
+          "nuget",
+          "verify",
+          "--all",
+          "<exact nupkg identified above>",
+          "--verbosity",
+          "detailed"
+        ],
+        "pathRedaction": "Only local SDK/package paths are redacted; exact arguments and full command receipts are retained with private delivery evidence."
+      }
+    },
+    {
+      "id": "microsoft.netcore.app.host.win-x64",
+      "version": "11.0.0",
+      "rawArchiveSha256": "5d89e190bda6185fb17f7b2a264b57406fac9a03fdcd079673b853c0f2b49334",
+      "bytes": 5824607,
+      "nugetContentHash": "iAr5yCMlI0tNvg6t51vg+FCD+t3LuP77Ct8yoL3tkHr8DxTRwQgkabi1AX0PLPFPJD0a1rkIaLBFe+YYqBOfVg==",
+      "authority": "Actual SDK11.0.100 nuget verify --all detailed Content hash; never the raw .nupkg.sha512 file",
+      "signatureVerification": {
+        "name": "native-nuget-verify-3",
+        "exit": 0,
+        "stdoutSha256": "b45d59718d4b8e6115457be405dc45aaeb822861b54cdf82a264df77c5a6d3c3",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "actualArgvSha256": "7d13d85b8cca1a2a404b4de85953d465c9c7d240fae12abd17e1f5ba2ade1af5",
+        "command": [
+          "<verified SDK11.0.100>",
+          "nuget",
+          "verify",
+          "--all",
+          "<exact nupkg identified above>",
+          "--verbosity",
+          "detailed"
+        ],
+        "pathRedaction": "Only local SDK/package paths are redacted; exact arguments and full command receipts are retained with private delivery evidence."
+      }
+    },
+    {
+      "id": "microsoft.netcore.app.runtime.linux-x64",
+      "version": "11.0.0",
+      "rawArchiveSha256": "458f0a7e0de107e4c08b3f375b920cd9427bbb5463870187b5f8afff0eb8664f",
+      "bytes": 42270532,
+      "nugetContentHash": "WTqFNKlUfzbporrlDrd4zKoddHECrKAh1I5Ms54ksoq/H6A5bfedZVefcRYrFiAlF0FBaOf0RCxSyuWmaNcq2w==",
+      "authority": "Actual SDK11.0.100 nuget verify --all detailed Content hash; never the raw .nupkg.sha512 file",
+      "signatureVerification": {
+        "name": "native-nuget-verify-4",
+        "exit": 0,
+        "stdoutSha256": "69a62138cbe5740faba478478d00ba2b1abb469c15729c0c341541e163e524ec",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "actualArgvSha256": "9df836fc4893cc873ec1061630206f0b158d725dd15fd3cf0badcc80bfd58508",
+        "command": [
+          "<verified SDK11.0.100>",
+          "nuget",
+          "verify",
+          "--all",
+          "<exact nupkg identified above>",
+          "--verbosity",
+          "detailed"
+        ],
+        "pathRedaction": "Only local SDK/package paths are redacted; exact arguments and full command receipts are retained with private delivery evidence."
+      }
+    },
+    {
+      "id": "microsoft.netcore.app.runtime.win-x64",
+      "version": "11.0.0",
+      "rawArchiveSha256": "1acb5da59cd994d3d50c9c52a9701bc8342948a1d8e4165f49bedf267c286b36",
+      "bytes": 43769220,
+      "nugetContentHash": "nAsnzl0M8c9nqmkmC/+eIgTsfLadtoCMkSYlerf3fuasvKYNhVXmbxpi2bJzpx3kW343wuH4HI38DDZ8QeAA4A==",
+      "authority": "Actual SDK11.0.100 nuget verify --all detailed Content hash; never the raw .nupkg.sha512 file",
+      "signatureVerification": {
+        "name": "native-nuget-verify-5",
+        "exit": 0,
+        "stdoutSha256": "ef124296b04ed8a4ad0a7ad82d0f82b0bd9d4797160263717cfd81ca2116b901",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "actualArgvSha256": "52d9429c9088936e4fdbeb546ad330b59bd727a22abfb9e889f8f16b69fbc645",
+        "command": [
+          "<verified SDK11.0.100>",
+          "nuget",
+          "verify",
+          "--all",
+          "<exact nupkg identified above>",
+          "--verbosity",
+          "detailed"
+        ],
+        "pathRedaction": "Only local SDK/package paths are redacted; exact arguments and full command receipts are retained with private delivery evidence."
+      }
+    },
+    {
+      "id": "microsoft.windowsdesktop.app.runtime.win-x64",
+      "version": "11.0.0",
+      "rawArchiveSha256": "1a5954e7945ecb3788cb88c66847e4c62d89e6739156355831029eb7d16d0c05",
+      "bytes": 39246236,
+      "nugetContentHash": "ydbPL4s9TdGX0eMh6QVqlWJZX6Hs+WSbx2OYTgmKp+d58Hjt2M0HqZhF4enfaXNinnCP0YnTLCZXx26/VS7CkA==",
+      "authority": "Actual SDK11.0.100 nuget verify --all detailed Content hash; never the raw .nupkg.sha512 file",
+      "signatureVerification": {
+        "name": "native-nuget-verify-6",
+        "exit": 0,
+        "stdoutSha256": "923ac74383f0f9a5d3478718321ccd13fe3e1b157a0ac4770b88069600710bf9",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "actualArgvSha256": "9c7efad88cb9631b42995dac798a52f604d57ae5e1ee2740cb665c5b5fce3961",
+        "command": [
+          "<verified SDK11.0.100>",
+          "nuget",
+          "verify",
+          "--all",
+          "<exact nupkg identified above>",
+          "--verbosity",
+          "detailed"
+        ],
+        "pathRedaction": "Only local SDK/package paths are redacted; exact arguments and full command receipts are retained with private delivery evidence."
+      }
+    }
+  ],
+  "sharedLinuxNativeFactSha256": "1f24dedfc1ff63c19948a3a9786431a3a3b888defbcff70fd3c4e8c827b3cdf4",
+  "scope": "Core runtime packs are redistributed; ASP.NET/Desktop/Host inputs are SDK-only unless selected by the app graph. No new product framework reference."
+}

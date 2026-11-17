@@ -95,14 +95,14 @@ The older [v0.1.0-preview.1 release](https://github.com/pouriajamali/financial-r
 and its [f137244914e8b392fffab386756fa12eb43f00f1 source](https://github.com/pouriajamali/financial-reconciliation-ledger/tree/f137244914e8b392fffab386756fa12eb43f00f1)
 retain their original assets, signatures and reproduction baseline.
 
-## Technology maintenance source preparation
+## .NET 11 maintenance
 
-The preview.3 source candidate selects SDK11.0.100/net11.0/stable C#15/runtime11.0.0
-with the same Sqlite10.0.15/SQLitePCLRaw2.1.13 graph. Only the outer build/version
-metadata is intended to change. Receipt/schema/issue/exit behavior and existing
-independent semantic tests stay unchanged. No new-runtime result or benefit is
-claimed here. The future bounded compatibility runner compares closed synthetic
-books in both directions with preview.2; only named outer version/build metadata
-and its directly bound summary digest may differ. SDK admission, actual job/cgroup
-containment, locked graph/audit/native notices and native executions remain pending.
-No existing passing suite was replayed during source preparation.
+Preview.3 selects SDK11.0.100/net11.0/stable C#15/runtime11.0.0 with the frozen
+Sqlite10.0.15/SQLitePCLRaw2.1.13 graph. The independent C# semantic tests remain
+unchanged: local Windows143 passed with2 explicit skips; Ubuntu24.04/WSL2 passed
+all145. Native packages retain exact-source manifests and upstream notices.
+The original22 extracted checks and14 bidirectional compatibility cases gate each
+archive. Only named outer version/build metadata and its bound summary digest may
+differ in the compatibility comparison. No new-runtime performance benefit is
+claimed. See the [maintenance release](RELEASE-v0.1.0-preview.3.md) for host and
+validation limits, including no Actions CI and unconfirmed Windows26H2 vendor support.

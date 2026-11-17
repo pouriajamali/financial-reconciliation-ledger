@@ -50,7 +50,12 @@ def main():
  notices=[f for f in runtime_pack.iterdir() if f.is_file() and (f.name.upper().startswith('LICENSE') or f.name.upper().startswith('THIRD-PARTY-NOTICES'))]
  assert any(f.name.upper().startswith('LICENSE') for f in notices) and any(f.name.upper().startswith('THIRD-PARTY-NOTICES') for f in notices),'Runtime redistribution notices required'
  for f in notices:shutil.copy2(f,licenses/(runtime_id+'-'+f.name))
- if runtime_id.lower() not in {d['id'].lower() for d in dependencies}:dependencies.append({'id':runtime_id,'version':'11.0.0','license':'MIT','copyright':'.NET Foundation and contributors; see bundled runtime notices'})
+ if runtime_id.lower() not in {d['id'].lower() for d in dependencies}:
+  runtime_archive=runtime_pack/(runtime_id.lower()+'.11.0.0.nupkg')
+  runtime_inputs=json.loads((ROOT/'tools/ci/native-runtime-inputs.json').read_text(encoding='utf-8'))['packages']
+  runtime_identity=next(x for x in runtime_inputs if x['id'].casefold()==runtime_id.casefold() and x['version']=='11.0.0')
+  assert runtime_archive.is_file() and sha(runtime_archive)==runtime_identity['rawArchiveSha256'],'Actual sealed runtime package identity required'
+  dependencies.append({'id':runtime_id,'version':'11.0.0','license':'MIT','copyright':'.NET Foundation and contributors; see bundled runtime notices','nugetContentHash':runtime_identity['nugetContentHash'],'nugetArchiveSha256':sha(runtime_archive)})
  (package/'DEPENDENCIES.json').write_text(json.dumps({'packages':dependencies,'sqlite':'SQLite core is public domain; SQLitePCLRaw wrappers retain their notices.','runtime':'Bundled .NET runtime retains Microsoft/.NET Foundation notices.'},indent=2)+'\n',encoding='utf-8')
  config=json.loads((package/'ledger.runtimeconfig.json').read_text(encoding='utf-8'))['runtimeOptions'];assert 'includedFrameworks' in config and 'frameworks' not in config
  if config.get('tfm')!='net11.0' or not any(f.get('name')=='Microsoft.NETCore.App' and f.get('version')=='11.0.0' for f in config['includedFrameworks']):raise RuntimeError('Exact self-contained net11.0/runtime11.0.0 required')

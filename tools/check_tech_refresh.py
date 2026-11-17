@@ -154,6 +154,17 @@ def admitted_control(args):
     require(args.control.stat().st_size <= 2 * 1024 * 1024, 'Control byte cap')
     require(re.fullmatch('[0-9a-f]{64}', args.control_sha256) and sha(args.control) == args.control_sha256, 'Control identity mismatch')
     value = read_json(args.control)
+    if value.get('schema') == 'frl01-local-delivery-compatibility/v1':
+        # Human-authorized local execution has its own identity. Never invent CI
+        # admission, hosted runner variables, or a producer's kernel evidence.
+        require(value['projectId'] == '01' and value['candidateCommit'] == args.commit, 'Local compatibility subject')
+        require(value['helperSha256'] == sha(Path(__file__).resolve()), 'Local helper identity')
+        require(value['parent']['pid'] == os.getppid() and value['parent']['startIdentity'] == parent_start(os.getppid()), 'Local parent identity')
+        binding(value['wrapper'])
+        require(value['work'] == str(args.work) and not args.work.exists(), 'Fresh local compatibility work')
+        require(0 < value['deadlineMonotonic'] - time.monotonic() <= 90, 'Local original compatibility deadline')
+        lease_guard(value)
+        return value, kernel_caps(value)
     if value.get('schema') == 'frl01-ci-compatibility-control/v1':
         import importlib.util
         path=Path(__file__).resolve().parent/'ci/ci_host_guard.py'
@@ -305,7 +316,7 @@ class Calls:
     def run(self, side, name, args, expected):
         lease_guard(self.control)
         kernel_caps(self.control)
-        require(len(self.records) < 60 and time.monotonic() - self.start < 600, 'Invocation/phase bound')
+        require(len(self.records) < 60 and time.monotonic() - self.start < 600 and time.monotonic() < self.control.get('deadlineMonotonic', float('inf')), 'Invocation/phase bound')
         prefix = self.work / f'{len(self.records):02d}-{side}-{name}'
         out, err = Path(str(prefix) + '.stdout'), Path(str(prefix) + '.stderr')
         env = dict(os.environ, DOTNET_ROOT=str(self.work / 'no-installed-dotnet'),
@@ -313,7 +324,8 @@ class Calls:
         started = time.monotonic()
         with out.open('xb') as stdout, err.open('xb') as stderr:
             child = subprocess.Popen([str(self.packages[side]), *map(str, args)], cwd=self.work,
-                                     env=env, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr)
+                                     env=env, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr,
+                                     creationflags=(subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0))
             try:
                 while child.poll() is None:
                     size = out.stat().st_size + err.stat().st_size

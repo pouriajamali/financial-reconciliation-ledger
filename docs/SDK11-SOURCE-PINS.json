@@ -37,7 +37,7 @@
     {
       "path": "Directory.Build.props",
       "mode": "100644",
-      "gitBlob": "19202883c93cd4d3fa41cee2f1dae1fefb9e5f80"
+      "gitBlob": "685afe61ac50b97b1dfd4fca75b25a617f9fba59"
     },
     {
       "path": "LICENSE",
@@ -47,17 +47,22 @@
     {
       "path": "NOTICE.md",
       "mode": "100644",
-      "gitBlob": "4a0f5fa90078146ac033d041b14bf132e9e4ba8c"
+      "gitBlob": "0f9984d4f446ea939acbf018d26b95148ca99852"
+    },
+    {
+      "path": "NuGet.Config",
+      "mode": "100644",
+      "gitBlob": "1541dd9bc0f5907579e941a8d6a1b10e9718df86"
     },
     {
       "path": "PROVENANCE.md",
       "mode": "100644",
-      "gitBlob": "a9ad5bbddf8c72816853ad9ef72549ee86a68c6c"
+      "gitBlob": "2916429b22b4f10289fc87a9951370c086965849"
     },
     {
       "path": "README.md",
       "mode": "100644",
-      "gitBlob": "42ce3c2c8320b3eee93ac248ad1dfc02d543d444"
+      "gitBlob": "c32ce846fc078a7b23124d5e6b05fdd646c273eb"
     },
     {
       "path": "SIGNING-PUBLIC-KEY.pub",
@@ -72,12 +77,12 @@
     {
       "path": "docs/CASE-STUDY.md",
       "mode": "100644",
-      "gitBlob": "5697ed882ab545ec396eb6206813850891b30067"
+      "gitBlob": "19aeeeb2602863c13f6abb4313599f9847de4838"
     },
     {
       "path": "docs/CI-POLICY.md",
       "mode": "100644",
-      "gitBlob": "d2edb4c997eca20f0cc757f5918eee8ed6681ad6"
+      "gitBlob": "dac8801c26f76b3cfa3580eb64481e3b734b9dab"
     },
     {
       "path": "docs/CONTRACT.md",
@@ -97,12 +102,12 @@
     {
       "path": "docs/RELEASE-v0.1.0-preview.3.md",
       "mode": "100644",
-      "gitBlob": "43b5be73860f465c95a352d5ed29ab2ec0f9d3a6"
+      "gitBlob": "ebcb589d8fec42be084a1acfde456accbfb4f98d"
     },
     {
       "path": "docs/SDK11-OBSERVED-INPUT-STATUS.json",
       "mode": "100644",
-      "gitBlob": "0f75200148fde789886ff6c6b585f333807fc21c"
+      "gitBlob": "30cbe2ab5afd0c9bb37f257fd822ea0735648a81"
     },
     {
       "path": "docs/SDK11-OWN-ROUTE-CONTRACT.json",
@@ -157,7 +162,7 @@
     {
       "path": "src/Ledger/packages.lock.json",
       "mode": "100644",
-      "gitBlob": "84d8fb632a80f1661ea939181f475954fd8611c6"
+      "gitBlob": "73334c2f0e3630d46c60bfd4c1df4fdb2ef581b1"
     },
     {
       "path": "tests/Ledger.Tests/Ledger.Tests.csproj",
@@ -172,7 +177,7 @@
     {
       "path": "tests/Ledger.Tests/packages.lock.json",
       "mode": "100644",
-      "gitBlob": "31a515ccb2d215d53cd869601fb2d2b294571c05"
+      "gitBlob": "957cfff0f8a9b43a2620c16575f4307d058a2ebc"
     },
     {
       "path": "tools/check_dotnet11.py",
@@ -192,7 +197,7 @@
     {
       "path": "tools/check_tech_refresh.py",
       "mode": "100644",
-      "gitBlob": "8c6548b20c60b9889bf9b32710983be54fee8da7"
+      "gitBlob": "e245ac84b367d150ccaa462087269c72f8f8ca32"
     },
     {
       "path": "tools/ci/MANAGER-ADMISSION.json",
@@ -245,6 +250,31 @@
       "gitBlob": "5937d2a388791688a05ce0542c10754b9857d1e9"
     },
     {
+      "path": "tools/ci/native-runtime-inputs.json",
+      "mode": "100644",
+      "gitBlob": "66e8f4dad2c482360da7c24f48febd54d7b03a8a"
+    },
+    {
+      "path": "tools/ci/runtime-locks/linux-x64/Ledger.Tests.lock.json",
+      "mode": "100644",
+      "gitBlob": "936a25d750948878c4a392b34c4b78a23191190e"
+    },
+    {
+      "path": "tools/ci/runtime-locks/linux-x64/Ledger.lock.json",
+      "mode": "100644",
+      "gitBlob": "e075b219deee57bbeff2f3c5b77fb3b162104c23"
+    },
+    {
+      "path": "tools/ci/runtime-locks/win-x64/Ledger.Tests.lock.json",
+      "mode": "100644",
+      "gitBlob": "556a96955fbe223dbd1e99ac9bfd1d1499ae3e8c"
+    },
+    {
+      "path": "tools/ci/runtime-locks/win-x64/Ledger.lock.json",
+      "mode": "100644",
+      "gitBlob": "9f59b8bcc2626e92627354cd8dc9c975096ab5e5"
+    },
+    {
       "path": "tools/ci/test_ci_failure_terminal.py",
       "mode": "100644",
       "gitBlob": "56398b43f4cb01503c112d01c9033d296bc23ee2"
@@ -292,7 +322,7 @@
     {
       "path": "tools/package.py",
       "mode": "100644",
-      "gitBlob": "9db465014cc7b5ded4de933aa449bb28ff2433b0"
+      "gitBlob": "91a6d5d0147e840a2448dd6aebb37dd5f2885590"
     },
     {
       "path": "tools/qualification_input_guard.py",
