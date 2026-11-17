@@ -231,7 +231,13 @@ def windows_native_prerequisites(sdk,checkout,env,proof,deadline):
     paths=','.join("'"+str(sdk/name).replace("'","''")+"'" for name in names)
     script="$ErrorActionPreference='Stop'; $r=@("+paths+") | ForEach-Object { $s=Get-AuthenticodeSignature -LiteralPath $_; if ($s.Status -ne 'Valid' -or $s.SignerCertificate.Subject -notmatch 'Microsoft Corporation' -or $null -eq $s.TimeStamperCertificate) { throw 'SDK_MICROSOFT_SIGNATURE_REQUIRED' }; [pscustomobject]@{name=[IO.Path]::GetFileName($_);status=[string]$s.Status;signer=$s.SignerCertificate.Subject;thumbprint=$s.SignerCertificate.Thumbprint;timestamp=$s.TimeStamperCertificate.Thumbprint} }; ConvertTo-Json -InputObject @($r) -Compress"
     record=run([str(system/'WindowsPowerShell/v1.0/powershell.exe'),'-NoProfile','-NonInteractive','-Command',script],checkout,env,proof,'own-windows-native-publisher',60,deadline)
-    rows=json.loads((proof/'own-windows-native-publisher.stdout').read_text(encoding='utf-8-sig'));need(len(rows)==5 and all(x['status']=='Valid' and x['timestamp'] for x in rows),'OWN_NATIVE_PUBLISHER_REQUIRED')
+    raw_output=(proof/'own-windows-native-publisher.stdout').read_bytes();error_output=proof/'own-windows-native-publisher.stderr'
+    encoding='UTF16_BOM' if raw_output.startswith((b'\xff\xfe',b'\xfe\xff')) else 'UTF8_BOM' if raw_output.startswith(b'\xef\xbb\xbf') else 'EMPTY' if not raw_output else 'NO_BOM'
+    process={'schema':'frl01-native-publisher-process/v1','record':record,'stdoutBytes':len(raw_output),'stderrBytes':error_output.stat().st_size,'encodingMarker':encoding,'SDKExecutions':0}
+    (proof/'windows-native-publisher-process.json').write_text(json.dumps(process,indent=2),encoding='utf-8')
+    # Match the already successful qualification's json.loads(raw_bytes),
+    # which detects JSON UTF BOM/zero-byte encodings without guessing a host.
+    rows=json.loads(raw_output);need(type(rows) is list and len(rows)==5 and all(type(x) is dict and x['status']=='Valid' and x['timestamp'] for x in rows),'OWN_NATIVE_PUBLISHER_REQUIRED')
     raw=json.dumps({'state':'OWN_CURRENT_SDK_PE_IMPORTS_AND_MICROSOFT_TIMESTAMPED_PUBLISHERS_OBSERVED','imports':imports,'publishers':rows,'record':record},indent=2).encode();need(len(raw)<=1048576,'OWN_NATIVE_PROOF_BOUND');(proof/'windows-native-prerequisites.json').write_bytes(raw)
     return [record]
 
@@ -241,6 +247,7 @@ def input_only(route,context,root,proof,deadline,normal,normal_context,normal_di
     with stage_alarm(150,deadline,normal,normal_context):
         (proof/'windows-input-stage.json').write_text(json.dumps({'schema':'frl01-own-input-stage/v1','stage':'BEFORE_SHARED_TRANSPORT','SDKExecutions':0}),encoding='utf-8')
         sdk,receipt=normal.transport('win-x64',normal_directory,normal_context);validate_normal_receipt(receipt,context,normal_context)
+        (proof/'normal-input-receipt.json').write_bytes(json.dumps(receipt,separators=(',',':')).encode())
         (proof/'windows-input-stage.json').write_text(json.dumps({'schema':'frl01-own-input-stage/v1','stage':'BEFORE_OWN_NATIVE_PREREQUISITES','SDKExecutions':0}),encoding='utf-8')
         records=native_prerequisites(sdk,Path(context['checkout']),env,proof,deadline)
     value={'schema':'frl01-current-consumer-input-only/v1','state':'OWN_CURRENT_WINDOWS_INPUT_AND_NATIVE_PREREQUISITES_OBSERVED_NO_SDK_TARGET','sourceCommit':context['sourceCommit'],'sourceTree':context['sourceTree'],'normalInput':receipt,'records':records,'SDKExecutions':0,'NugetPackageAdmission':False,'productAdmission':False}

@@ -57,7 +57,7 @@
     {
       "path": "README.md",
       "mode": "100644",
-      "gitBlob": "ba08d7d1c875192709656c5445ca0b7d4ac50042"
+      "gitBlob": "961e8bb3f579cdbc13e3b570ecceb7001da96d3c"
     },
     {
       "path": "SIGNING-PUBLIC-KEY.pub",
@@ -97,7 +97,7 @@
     {
       "path": "docs/RELEASE-v0.1.0-preview.3.md",
       "mode": "100644",
-      "gitBlob": "cbc01c6b1da9eacb6d0f3dc369dd1253ed7985a7"
+      "gitBlob": "c897e83b22ec063106c332088f8d392e7910e2de"
     },
     {
       "path": "docs/SDK11-OWN-ROUTE-CONTRACT.json",
@@ -192,7 +192,7 @@
     {
       "path": "tools/ci/MANAGER-ADMISSION.json",
       "mode": "100644",
-      "gitBlob": "2019c25dd063598c56cb240ee4e85406336780bf"
+      "gitBlob": "82651433e2c79a6f00e7fce319530a749bd6f97e"
     },
     {
       "path": "tools/ci/PROFILE.json",
@@ -217,7 +217,7 @@
     {
       "path": "tools/ci/ci_pipeline.py",
       "mode": "100644",
-      "gitBlob": "835e63145817742b2c40135c6850c901cf56a51a"
+      "gitBlob": "1ddbf4f1b70703d4e863c89a98778f7fae6c4fe7"
     },
     {
       "path": "tools/ci/frl01_phase.py",
