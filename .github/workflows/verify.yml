@@ -9,7 +9,7 @@ on:
       phase:
         description: Existing controlled row phase
         type: choice
-        options: [product-ci, input-graph]
+        options: [product-ci, input-graph, input-only]
         default: product-ci
       admission_json:
         description: Exact source/input/host admission template from authorized dispatcher
@@ -59,7 +59,7 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        include: ${{ github.event_name == 'workflow_dispatch' && inputs.phase == 'input-graph' && fromJSON('[{"os":"ubuntu-24.04","rid":"linux-x64"}]') || fromJSON('[{"os":"windows-2025","rid":"win-x64"},{"os":"ubuntu-24.04","rid":"linux-x64"}]') }}
+        include: ${{ github.event_name == 'workflow_dispatch' && inputs.phase == 'input-graph' && fromJSON('[{"os":"ubuntu-24.04","rid":"linux-x64"}]') || github.event_name == 'workflow_dispatch' && inputs.phase == 'input-only' && fromJSON('[{"os":"windows-2025","rid":"win-x64"}]') || fromJSON('[{"os":"windows-2025","rid":"win-x64"},{"os":"ubuntu-24.04","rid":"linux-x64"}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -87,10 +87,11 @@ jobs:
           }
           if (-not $admission -or $hash -notmatch '^[0-9a-f]{64}$') { throw 'HOLD: exact external own admission is absent' }
           if ((Get-FileHash -LiteralPath $admission -Algorithm SHA256).Hash.ToLowerInvariant() -ne $hash) { throw 'HOLD: own admission hash differs' }
-          & $python -I -B tools/ci/ci_host_controller.py --mode $env:FRL01_PHASE --admission $admission --admission-sha256 $hash --profile tools/ci/PROFILE.json
+          $profile = if ($IsWindows) { 'tools/ci/PROFILE.win-x64.json' } else { 'tools/ci/PROFILE.json' }
+          & $python -I -B tools/ci/ci_host_controller.py --mode $env:FRL01_PHASE --admission $admission --admission-sha256 $hash --profile $profile
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
-        if: (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch') && inputs.phase != 'input-graph'
+        if: (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch') && inputs.phase != 'input-graph' && inputs.phase != 'input-only'
         with:
           retention-days: ${{ startsWith(github.ref, 'refs/tags/') && 7 || 3 }}
           name: tested-${{ matrix.rid }}

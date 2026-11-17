@@ -264,8 +264,15 @@ class WindowsJob:
         if not create:
             return
         self.unassignedChildTerminal = True
-        self.job = self.api.CreateJobObjectW(None, None)
+        self.jobName = local.get('jobName')
+        if self.jobName is not None:need(self.jobName.startswith('Local\\frl01-ci-') and len(self.jobName)<=180 and all(c.isascii() and (c.isalnum() or c in '\\._-') for c in self.jobName),'Own named job identity')
+        ctypes.set_last_error(0)
+        self.job = self.api.CreateJobObjectW(None, self.jobName)
+        created_error = ctypes.get_last_error()
         need(self.job, 'Own job creation failed')
+        if created_error == 183:
+            self.api.CloseHandle(self.job);self.job=None
+            raise RuntimeError('OWN_NAMED_JOB_ALREADY_EXISTS')
         limits = Extended()
         limits.basic.flags = 0x2208
         limits.basic.processes = local['activeProcessLimit']
@@ -287,40 +294,58 @@ class WindowsJob:
         need(cpu.flags & 5 == 5 and 0 < cpu.rate <= self.cpuRateCeiling, 'Actual job CPU differs')
         return {'jobMemoryBytes': limits.jobMemory, 'peakJobMemoryBytes': limits.peakJob, 'activeProcesses': accounting.active, 'totalProcesses': accounting.total, 'processLimit': limits.basic.processes, 'cpuRatePer10000': cpu.rate, 'killOnClose': True}
 
-    def launch(self, argv, cwd):
+    def launch(self, argv, cwd, env=None, logs=None):
         w = self.w
         class Startup(ctypes.Structure):
             _fields_ = [('cb', w.DWORD), ('reserved', w.LPWSTR), ('desktop', w.LPWSTR), ('title', w.LPWSTR), ('x', w.DWORD), ('y', w.DWORD), ('xs', w.DWORD), ('ys', w.DWORD), ('xc', w.DWORD), ('yc', w.DWORD), ('fill', w.DWORD), ('flags', w.DWORD), ('show', w.WORD), ('reserved2', w.WORD), ('reservedBytes', ctypes.POINTER(ctypes.c_byte)), ('stdin', w.HANDLE), ('stdout', w.HANDLE), ('stderr', w.HANDLE)]
-        class Process(ctypes.Structure):
-            _fields_ = [('process', w.HANDLE), ('thread', w.HANDLE), ('pid', w.DWORD), ('tid', w.DWORD)]
-        self.api.CreateProcessW.argtypes = [w.LPCWSTR, w.LPWSTR, ctypes.c_void_p, ctypes.c_void_p, w.BOOL, w.DWORD, ctypes.c_void_p, w.LPCWSTR, ctypes.POINTER(Startup), ctypes.POINTER(Process)]
-        startup, info = Startup(), Process()
-        startup.cb = ctypes.sizeof(startup)
-        line = ctypes.create_unicode_buffer(subprocess.list2cmdline(argv))
-        need(self.api.CreateProcessW(argv[0], line, None, None, False, 0x08000004, None, str(cwd), ctypes.byref(startup), ctypes.byref(info)), 'Suspended owned child creation failed')
-        self.unassignedChildTerminal = False
+        class StartupEx(ctypes.Structure):_fields_=[('startup',Startup),('attributes',ctypes.c_void_p)]
+        class Process(ctypes.Structure):_fields_ = [('process', w.HANDLE), ('thread', w.HANDLE), ('pid', w.DWORD), ('tid', w.DWORD)]
+        class Security(ctypes.Structure):_fields_=[('length',w.DWORD),('descriptor',ctypes.c_void_p),('inherit',w.BOOL)]
+        self.api.CreateProcessW.argtypes=[w.LPCWSTR,w.LPWSTR,ctypes.c_void_p,ctypes.c_void_p,w.BOOL,w.DWORD,ctypes.c_void_p,w.LPCWSTR,ctypes.c_void_p,ctypes.POINTER(Process)]
+        self.api.GetProcessTimes.argtypes=[w.HANDLE,*([ctypes.POINTER(w.FILETIME)]*4)]
+        self.api.GetActiveProcessorCount.argtypes=[w.WORD];self.api.GetActiveProcessorCount.restype=w.DWORD
+        handles=[];attribute_buffer=None;attributes_initialized=False;info=Process();startup=StartupEx();startup.startup.cb=ctypes.sizeof(StartupEx);flags=0x08000004
         try:
-            need(self.api.AssignProcessToJobObject(self.job, info.process), 'Suspended child job membership failed')
-            readback = self.readback()
-            need(readback['activeProcesses'] >= 1, 'Suspended child not observed in job')
-            need(self.api.ResumeThread(info.thread) != 0xffffffff, 'Owned child resume failed')
-        except Exception:
-            killed = self.api.TerminateProcess(info.process, 1)
-            self.unassignedChildTerminal = bool(killed and self.api.WaitForSingleObject(info.process, 5000) == 0)
-            self.api.CloseHandle(info.process)
-            raise
+            if logs is not None:
+                self.api.CreateFileW.argtypes=[w.LPCWSTR,w.DWORD,w.DWORD,ctypes.POINTER(Security),w.DWORD,w.DWORD,w.HANDLE];self.api.CreateFileW.restype=w.HANDLE
+                self.api.InitializeProcThreadAttributeList.argtypes=[ctypes.c_void_p,w.DWORD,w.DWORD,ctypes.POINTER(ctypes.c_size_t)]
+                self.api.UpdateProcThreadAttribute.argtypes=[ctypes.c_void_p,w.DWORD,ctypes.c_size_t,ctypes.c_void_p,ctypes.c_size_t,ctypes.c_void_p,ctypes.c_void_p]
+                self.api.DeleteProcThreadAttributeList.argtypes=[ctypes.c_void_p]
+                sec=Security(ctypes.sizeof(Security),None,True)
+                for path,access,creation in [('NUL',0x80000000,3),(str(logs/'worker.stdout'),0x40000000,1),(str(logs/'worker.stderr'),0x40000000,1)]:
+                    handle=self.api.CreateFileW(path,access,3,ctypes.byref(sec),creation,0x80,None);need(handle not in (None,ctypes.c_void_p(-1).value),'OWN_WORKER_LOG_HANDLE');handles.append(handle)
+                startup.startup.flags=0x100;startup.startup.stdin,startup.startup.stdout,startup.startup.stderr=handles
+                size=ctypes.c_size_t();self.api.InitializeProcThreadAttributeList(None,1,0,ctypes.byref(size));need(0<size.value<=65536,'OWN_HANDLE_ATTRIBUTE_BOUND');attribute_buffer=ctypes.create_string_buffer(size.value);startup.attributes=ctypes.cast(attribute_buffer,ctypes.c_void_p)
+                need(self.api.InitializeProcThreadAttributeList(startup.attributes,1,0,ctypes.byref(size)),'OWN_HANDLE_ATTRIBUTE_INIT');attributes_initialized=True
+                inherited=(w.HANDLE*3)(*handles);need(self.api.UpdateProcThreadAttribute(startup.attributes,0,0x20002,ctypes.byref(inherited),ctypes.sizeof(inherited),None,None),'OWN_FIXED_HANDLE_LIST');flags|=0x00080000
+            else:startup.startup.cb=ctypes.sizeof(Startup)
+            environment=None
+            if env is not None:
+                need(all(type(k) is str and type(v) is str and '=' not in k and '\0' not in k+v for k,v in env.items()),'OWN_WORKER_ENVIRONMENT')
+                environment=ctypes.create_unicode_buffer('\0'.join(k+'='+v for k,v in sorted(env.items(),key=lambda x:x[0].upper()))+'\0\0');flags|=0x400
+            line=ctypes.create_unicode_buffer(subprocess.list2cmdline(argv))
+            need(self.api.CreateProcessW(argv[0],line,None,None,bool(handles),flags,environment,str(cwd),ctypes.byref(startup),ctypes.byref(info)),'Suspended owned child creation failed')
+            self.unassignedChildTerminal=False
+            try:
+                need(self.api.AssignProcessToJobObject(self.job,info.process),'Suspended child job membership failed');readback=self.readback();need(readback['activeProcesses']==1,'Suspended child not sole job member')
+                times=[w.FILETIME() for _ in range(4)];need(self.api.GetProcessTimes(info.process,*[ctypes.byref(v) for v in times]),'OWN_RETAINED_START_IDENTITY')
+                self.beforeResume={'pid':int(info.pid),'processStartIdentity':'FILETIME:'+str((times[0].dwHighDateTime<<32)|times[0].dwLowDateTime),'jobName':self.jobName,'memoryMaxBytes':readback['jobMemoryBytes'],'tasksMax':readback['processLimit'],'cpuRate':readback['cpuRatePer10000'],'logicalHostCpu':int(self.api.GetActiveProcessorCount(0xffff)),'state':'SUSPENDED','membershipBeforeRelease':True,'retainedStartHandle':True}
+                need(self.api.ResumeThread(info.thread)!=0xffffffff,'Owned child resume failed')
+            except BaseException:
+                killed=self.api.TerminateProcess(info.process,1);self.unassignedChildTerminal=bool(killed and self.api.WaitForSingleObject(info.process,5000)==0);self.api.CloseHandle(info.process);raise
+            finally:self.api.CloseHandle(info.thread)
+            self.unassignedChildTerminal=True;self.process,self.pid=info.process,info.pid
+            return readback
         finally:
-            self.api.CloseHandle(info.thread)
-        self.unassignedChildTerminal = True
-        self.process, self.pid = info.process, info.pid
-        return readback
+            if attributes_initialized:self.api.DeleteProcThreadAttributeList(startup.attributes)
+            for handle in handles:self.api.CloseHandle(handle)
 
     def exited(self):
         return self.api.WaitForSingleObject(self.process, 0) == 0
 
     def terminate(self):
         need(self.api.TerminateJobObject(self.job, 1), 'Own job termination failed')
-        self.api.WaitForSingleObject(self.process, 5000)
+        if hasattr(self,'process'):self.api.WaitForSingleObject(self.process, 5000)
 
     def exit_code(self):
         result = self.w.DWORD()

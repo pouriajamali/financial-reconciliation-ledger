@@ -16,7 +16,11 @@
       "cpuEquivalentMax": 2,
       "processLimit": 32,
       "suspendedChild": true,
-      "killOnClose": true
+      "killOnClose": true,
+      "imageOSAccepted": [
+        "win25",
+        "win25-vs2026"
+      ]
     },
     "GitHubHostedUbuntu24.04x64": {
       "rid": "linux-x64",
@@ -68,5 +72,5 @@
   "ownedUnitPrefix": "frl01-ci-",
   "inertCandidate": true,
   "executionApproved": false,
-  "normalTransport": "Only identical shared callable d9c690d8, normal catalog686c6c77, frozen63e and actual current held worker; Windows DENIED."
+  "normalTransport": "Identical final shared4dab API c37e2f48/catalog8995a4d2. Own exact source/profile, original clock, actual held parent/PID/kernel proof are required per call. SDK host history is separate from native nupkg/product admission."
 }

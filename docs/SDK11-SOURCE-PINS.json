@@ -22,7 +22,7 @@
     {
       "path": ".github/workflows/verify.yml",
       "mode": "100644",
-      "gitBlob": "18c72118acb2798aba7e0cf62006332dbacb6131"
+      "gitBlob": "9e0a4cd362de5e7a55ebd237a6bcabd98cad205d"
     },
     {
       "path": ".gitignore",
@@ -57,7 +57,7 @@
     {
       "path": "README.md",
       "mode": "100644",
-      "gitBlob": "2ab1858853eacd738a088dc324c724b2a7cb4608"
+      "gitBlob": "fef6fa3e6083a3f81b32093fe598a5218f23f153"
     },
     {
       "path": "SIGNING-PUBLIC-KEY.pub",
@@ -97,12 +97,12 @@
     {
       "path": "docs/RELEASE-v0.1.0-preview.3.md",
       "mode": "100644",
-      "gitBlob": "ed83c51c11da4f39105c5c985c979fd2f2a34584"
+      "gitBlob": "099ddf6309d77c21a1f4967a7ff4ab4bd7be1fc1"
     },
     {
       "path": "docs/SDK11-OWN-ROUTE-CONTRACT.json",
       "mode": "100644",
-      "gitBlob": "b44599df3b3792a5cd7945a3fa462e7175affbfd"
+      "gitBlob": "3e2d3e88ed70ba7708927b9bdda30731ce9662d7"
     },
     {
       "path": "docs/SDK11_SHARED_INPUT_INTERFACE.json",
@@ -192,32 +192,37 @@
     {
       "path": "tools/ci/MANAGER-ADMISSION.json",
       "mode": "100644",
-      "gitBlob": "70d4722d370f963fb69a8c939307b9c58ae8a0c8"
+      "gitBlob": "e96dcb9904bc2818addaad64328dcbd0c421fe04"
     },
     {
       "path": "tools/ci/PROFILE.json",
       "mode": "100644",
-      "gitBlob": "ac2ad6d43964c3046c592a483e85719955519c98"
+      "gitBlob": "96424d2c2355ee097cfe753ba70ff47304798d4f"
+    },
+    {
+      "path": "tools/ci/PROFILE.win-x64.json",
+      "mode": "100644",
+      "gitBlob": "4753917e204c555456f65d27e501ef7e18900d42"
     },
     {
       "path": "tools/ci/ci_host_controller.py",
       "mode": "100644",
-      "gitBlob": "afd2597029d9c5702685fb6bdb45b6e3c8dfd8eb"
+      "gitBlob": "32aa17a0df51edd24d418532ff4c412465e0f5a3"
     },
     {
       "path": "tools/ci/ci_host_guard.py",
       "mode": "100644",
-      "gitBlob": "734c52c7a68e6329c9445585ac5a3705f5073fb5"
+      "gitBlob": "8773729a157b8aa44811b04ce7fa2b3610cecc02"
     },
     {
       "path": "tools/ci/ci_pipeline.py",
       "mode": "100644",
-      "gitBlob": "85e689c3818df1bde48f6e20dc64f758c90e673b"
+      "gitBlob": "293ae160f3486a5a4ca97b389b391245b0851a1b"
     },
     {
       "path": "tools/ci/frl01_phase.py",
       "mode": "100644",
-      "gitBlob": "ddbd5e9ca4b2417ed23cae88fd15af053ec7b47c"
+      "gitBlob": "8a57ceee20fe2bb11b343137d1b9964ec645b4ae"
     },
     {
       "path": "tools/ci/host_boundary_fixtures.json",
@@ -248,6 +253,11 @@
       "path": "tools/ci/test_ci_normal_binding.py",
       "mode": "100644",
       "gitBlob": "ae8d29cc2c2da9d2be78e31c11635d428f9f2955"
+    },
+    {
+      "path": "tools/ci/test_ci_windows_held_cpu.py",
+      "mode": "100644",
+      "gitBlob": "621802c5d386041d0a095ad033b23a0e186794e9"
     },
     {
       "path": "tools/ci/test_ci_windows_image.py",

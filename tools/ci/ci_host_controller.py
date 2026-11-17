@@ -31,14 +31,17 @@ OWN_REPOSITORY='pouriajamali/financial-reconciliation-ledger'
 
 def normal_values(own,files,clock,supervisor):
     # Pure owner-only adapter; finite SDK0 fixtures can inspect this without host/transport.
-    need(own['projectId']=='01' and own['rid']=='linux-x64' and own['repository']==OWN_REPOSITORY,'WINDOWS_OR_FOREIGN_NORMAL_DENIED')
+    need(own['projectId']=='01' and own['rid'] in ('linux-x64','win-x64') and own['repository']==OWN_REPOSITORY,'FOREIGN_NORMAL_DENIED')
     need(set(files)=={'admission','capsEvidence','checkout','contract','controller','profile','sourcePins'} and all(isinstance(x,str) and x for x in files.values()),'NORMAL_OWN_FILES')
     start,end=clock['rowStartedMonotonicNs'],clock['deadlineMonotonicNs']
     need(type(start) is int and type(end) is int and 0<start<end and end-start<=900000000000,'ORIGINAL_OWN_CLOCK')
-    need(type(supervisor['pid']) is int and supervisor['pid']>0 and supervisor['start'].startswith('proc-start:'),'OWN_SUPERVISOR_START')
+    need(type(supervisor['pid']) is int and supervisor['pid']>0 and supervisor['start'].startswith('proc-start:' if own['rid']=='linux-x64' else 'FILETIME:'),'OWN_SUPERVISOR_START')
     return dict(files,projectId='01',repository=OWN_REPOSITORY,expectedSourceCommit=own['sourceCommit'],expectedSourceTree=own['sourceTree'],rowStartedMonotonicNs=start,deadlineMonotonicNs=end,supervisorPID=supervisor['pid'],supervisorStartIdentity=supervisor['start'])
 
 def actual_normal_evidence(own,held,before):
+    if own['rid']=='win-x64':
+        fields=('pid','processStartIdentity','jobName','memoryMaxBytes','tasksMax','cpuRate','logicalHostCpu')
+        return {'schema':'sdk11-own-current-cap-evidence/v1','projectId':'01','repository':OWN_REPOSITORY,'sourceCommit':own['sourceCommit'],'sourceTree':own['sourceTree'],'profileSha256':own['profileSha256'],'controllerSha256':own['controllerSha256'],'worker':{k:before[k] for k in fields},'heldBeforeExec':before,'supervisor':{'pid':own['supervisorPID'],'processStartIdentity':own['supervisorStartIdentity'],'deadlineMonotonicNs':own['deadlineMonotonicNs']},'rowStartedMonotonicNs':own['rowStartedMonotonicNs'],'deadlineMonotonicNs':own['deadlineMonotonicNs'],'bootstrap':held['bootstrap']}
     return {'schema':'sdk11-own-current-cap-evidence/v1','projectId':'01','repository':OWN_REPOSITORY,'sourceCommit':own['sourceCommit'],'sourceTree':own['sourceTree'],'profileSha256':own['profileSha256'],'controllerSha256':own['controllerSha256'],'worker':{'pid':held['pid'],'processStartIdentity':'proc-start:'+held['startIdentity'],'uid':held['workerUid'],'gid':held['workerGid'],'cgroup':before['cgroup'],'kernelLimits':before['kernelLimits']},'beforeExec':before,'supervisor':{'pid':own['supervisorPID'],'processStartIdentity':own['supervisorStartIdentity'],'deadlineMonotonicNs':own['deadlineMonotonicNs']},'rowStartedMonotonicNs':own['rowStartedMonotonicNs'],'deadlineMonotonicNs':own['deadlineMonotonicNs'],'bootstrap':held['bootstrap']}
 
 def context(admission,guard):
@@ -68,10 +71,10 @@ def context(admission,guard):
         flags=[set(x.split(':',1)[1].split()) for x in raw.decode().splitlines() if x.startswith('flags')]
         need(flags and all({'cx16','popcnt','pni','ssse3','sse4_1','sse4_2','lahf_lm'}<=x for x in flags),'OWN_CPU_V2');own['cpuEvidenceSha256']=hashlib.sha256(raw).hexdigest()
     else:
-        cpu=guard.bound(admission['currentCpuObservation']);need(all(cpu[k]==own[k] for k in ['jobId','runId','runAttempt','instanceIdentity','hostClass','imageVersion']) and cpu['allLogicalCpuV2'] is True,'OWN_CPU_V2_ATTACHMENT')
+        own['cpuObservationPendingWithinOwnHeldWorker']=True
     pins=guard.bound(admission['sourcePinTable']);own['sourcePinTableSha256']=hashlib.sha256(json.dumps(pins['sourcePins'],sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
     guard.bound(admission['ownContract']);need(admission['ownContract']['sha256']==own['contractSha256'],'OWN_TRACKED_CONTRACT')
-    own['cpuV2']=True
+    own['cpuV2']=os.name!='nt'
     return own
 
 def linux_caps():
@@ -84,25 +87,39 @@ def linux_caps():
     return {'cgroup':str(group),'cpu.max':cpu,'memory.max':memory,'memory.swap.max':swap,'pids.max':tasks}
 
 def worker(args,admission,profile,guard,kernel,own,route,root,deadline):
+    watch=win=normal=None
     if os.name=='nt':
-        query=kernel.WindowsJob.__new__(kernel.WindowsJob)
-        query=kernel.WindowsJob({'activeProcessLimit':32,'jobMemoryBytes':2147483648,'cpuRatePer10000':min(10000,20000//os.cpu_count())},create=False)
-        caps=query.readback(current=True);limits={'memoryBytes':caps['jobMemoryBytes'],'cpuEquivalent':caps['cpuRatePer10000']*os.cpu_count()/10000,'processLimit':caps['processLimit'],'killOnClose':caps['killOnClose'],'suspendedBeforeAssignment':True}
+        normal=module('frl01_shared_normal',HERE.parent/'check_dotnet11.py',NORMAL_MODULE_SHA)
+        win=normal._load('normal_windows_input',normal.PINS['windowsNormalHelperSha256'])
+        watch=win.OwnJob(normal,own,{'worker':{'jobName':own['jobName']}},own['deadlineMonotonicNs'])
+    try:return worker_stages(args,admission,profile,guard,kernel,own,route,root,deadline,normal,win,watch)
+    finally:
+        if watch is not None:watch.close()
+
+
+def worker_stages(args,admission,profile,guard,kernel,own,route,root,deadline,normal,win,watch):
+    cpu=None
+    if os.name=='nt':
+        caps=win.host(normal,own,watch);cpu=win.measure_cpu(normal,root)
+        need(cpu['processorCount']>0,'OWN_WINDOWS_CPU_V2');own['cpuV2']=True;own['cpuEvidenceSha256']=cpu['evidenceSha256']
+        limits={'memoryBytes':caps['memoryMaxBytes'],'cpuEquivalent':caps['effectiveCpuCores'],'processLimit':caps['tasksMax'],'killOnClose':bool(caps['limitFlags']&0x2000),'suspendedBeforeAssignment':True}
     else:
         caps=linux_caps();limits={'memoryBytes':int(caps['memory.max']),'cpuEquivalent':int(caps['cpu.max'][0])/int(caps['cpu.max'][1]),'tasksMax':int(caps['pids.max']),'swapBytes':int(caps['memory.swap.max'])}
         need(os.getuid()==own['uid'] and os.getgid()==own['gid'],'ACTUAL_WORKER_UID_GID')
     held={'projectId':'01','jobId':own['jobId'],'instanceIdentity':own['instanceIdentity'],'pid':os.getpid(),'startIdentity':kernel.start_id(os.getpid()),'childHeld':True,'membershipObservedBeforeRelease':True,'sdkLaunchesBeforeRelease':0,'limits':limits,'kernel':caps,'workerUid':os.getuid() if os.name!='nt' else None,'workerGid':os.getgid() if os.name!='nt' else None}
-    held['bootstrap']={'pythonVersion':platform.python_version(),'pythonExeSha256':sha(Path(sys.executable).resolve()),'gitSha256':sha(Path('/usr/bin/git')),'systemctlSha256':sha(Path('/usr/bin/systemctl'))} if os.name!='nt' else None
+    held['bootstrap']={'pythonVersion':platform.python_version(),'pythonExeSha256':sha(Path(sys.executable).resolve()),'gitSha256':sha(Path('/usr/bin/git')),'systemctlSha256':sha(Path('/usr/bin/systemctl'))} if os.name!='nt' else caps['bootstrap']
+    if cpu is not None:held['cpu']=cpu
     write(root/'held.json',held)
     if os.name!='nt':os.kill(os.getpid(),signal.SIGSTOP)
     while not(root/'release-held.json').exists():need(time.monotonic()<deadline,'HELD_DEADLINE');time.sleep(.05)
     release=load(root/'release-held.json');need(release['token']==args.token and release['heldSha256']==sha(root/'held.json'),'HELD_RELEASE_IDENTITY')
     guard.own_caps(held,own)
     need(load(root/'consumer-host-admission.json')==guard.consumer_record(admission,own,sha(root/'normal-caps-evidence.json')),'ACTUAL_CANONICAL_CONSUMER_RECORD')
-    signal.signal(signal.SIGALRM,lambda *_:(_ for _ in ()).throw(RuntimeError('ORIGINAL_ROW_DEADLINE')))
-    signal.setitimer(signal.ITIMER_REAL,max(.000001,deadline-time.monotonic()))
+    if os.name!='nt':
+        signal.signal(signal.SIGALRM,lambda *_:(_ for _ in ()).throw(RuntimeError('ORIGINAL_ROW_DEADLINE')))
+        signal.setitimer(signal.ITIMER_REAL,max(.000001,deadline-time.monotonic()))
     result={'state':'SDK0_CONTROL_ONLY','SDKLaunches':0}
-    if args.mode in ('product-ci','input-graph'):
+    if args.mode in ('product-ci','input-graph','input-only'):
         if route.get('runNewSdk0ModelFixtures'):
             need(sha(HERE/'test_ci_host_guard.py')==admission['sources']['newTestSha256'] and sha(HERE/'host_boundary_fixtures.json')==admission['sources']['newFixtureSha256'],'NEW_TEST_SOURCE_FIXTURES')
             check=subprocess.run([str(Path(sys.executable).resolve()),'-I','-B',str(HERE/'test_ci_host_guard.py')],capture_output=True,timeout=min(40,max(.1,deadline-time.monotonic())))
@@ -111,15 +128,14 @@ def worker(args,admission,profile,guard,kernel,own,route,root,deadline):
         control=root/'actual-ci-compatibility-control.json'
         write(control,{'schema':'frl01-ci-compatibility-control/v1','guardSha256':admission['sources']['guardSha256'],'managerAdmission':{'path':str(args.admission),'sha256':args.admission_sha256},'ownContext':{'path':str(root/'context.json'),'sha256':sha(root/'context.json')},'ownHeldProof':{'path':str(root/'held.json'),'sha256':sha(root/'held.json')},'candidateCommit':own['sourceCommit'],'helperSha256':sha(Path(own['checkout'])/'tools/check_tech_refresh.py'),'parent':{'pid':os.getpid(),'startIdentity':kernel.start_id(os.getpid())},'work':str(root/'compatibility'),'kernel':caps,'ciOwnership':{'path':str(root/'ownership.json'),'sha256':sha(root/'ownership.json')}})
         route['compatibilityControlBinding']={'path':str(control),'sha256':sha(control)}
-        need(own['rid']=='linux-x64','WINDOWS_NORMAL_DENIED')
-        normal=module('frl01_shared_normal',HERE.parent/'check_dotnet11.py',NORMAL_MODULE_SHA)
+        normal=normal or module('frl01_shared_normal',HERE.parent/'check_dotnet11.py',NORMAL_MODULE_SHA)
         need(sha(HERE.parent/'sdk11-normal-inputs.lock.json')==NORMAL_CATALOG_SHA,'BYTE_IDENTICAL_NORMAL_CATALOG')
         files={'admission':str(root/'consumer-host-admission.json'),'capsEvidence':str(root/'normal-caps-evidence.json'),'checkout':own['checkout'],'contract':str(Path(admission['ownContract']['path']).resolve()),'controller':str(Path(__file__).resolve()),'profile':str(args.profile),'sourcePins':str(Path(admission['sourcePinTable']['path']).resolve())}
         normal_context=normal_values(own,files,own,{'pid':own['supervisorPID'],'start':own['supervisorStartIdentity']})
         pipeline=module('frl01_ci_pipeline',HERE/'ci_pipeline.py',admission['sources']['pipelineSha256'])
-        execute=pipeline.input_graphs if args.mode=='input-graph' else pipeline.pipeline
+        execute=pipeline.input_only if args.mode=='input-only' else pipeline.input_graphs if args.mode=='input-graph' else pipeline.pipeline
         result=execute(route,own,root,root/'proof',deadline,normal,normal_context,Path(own['normalDirectory']))
-    signal.setitimer(signal.ITIMER_REAL,0)
+    if os.name!='nt':signal.setitimer(signal.ITIMER_REAL,0)
     write(root/'worker-result.json',{'projectId':'01','result':result,'kernel':caps,'targetExit':0,'currentJobId':own['jobId'],'terminalParentProofPending':True})
     return 0
 
@@ -169,9 +185,48 @@ def capture_linux_failure(error,root,own,held,unit,client,pidfd):
     for source in candidates:
         if source.is_file():need(source.stat().st_size<=2097152,'PROOF_FILE_LIMIT');(target/source.name).write_bytes(source.read_bytes())
 
+
+def validate_windows_held_cpu(held,before,cpu,cpu_sha256):
+    need(before['pid']==held['pid'] and before['processStartIdentity']=='FILETIME:'+held['startIdentity'],'OWN_RETAINED_WINDOWS_WORKER')
+    current=held['kernel'];need(all(before[k]==current[k] for k in ('pid','processStartIdentity','jobName','memoryMaxBytes','tasksMax','cpuRate','logicalHostCpu')),'OWN_WINDOWS_HELD_KERNEL_MATCH')
+    rows=cpu['processors'];need(cpu_sha256==held['cpu']['evidenceSha256'] and type(rows) is list and len(rows)==held['cpu']['processorCount']>0,'OWN_WINDOWS_CPU_ATTACHMENT')
+    code=bytes.fromhex('5389c889d10fa241890041895804418948084189500c5bc3')
+    need(cpu['codeHex']==code.hex() and cpu['codeSha256']==hashlib.sha256(code).hexdigest(),'OWN_WINDOWS_CPU_MEASUREMENT_SOURCE')
+    need(all(type(x['processor']) is int and 0<=x['processor']<64 for x in rows) and len({x['processor'] for x in rows})==len(rows),'OWN_WINDOWS_CPU_SCOPE')
+    mask=(1<<0)|(1<<9)|(1<<13)|(1<<19)|(1<<20)|(1<<23)
+    need(all(type(x['leaf1Ecx']) is int and type(x['extendedEcx']) is int and x['leaf1Ecx']&mask==mask and x['extendedEcx']&1 for x in rows),'OWN_WINDOWS_ALL_CPU_V2')
+    return cpu_sha256
+
+
+def capture_windows_failure(error,root,own,held,job):
+    if os.name!='nt' or job is None or job.job is None:return
+    job.terminate();caps=job.readback();created=hasattr(job,'process')
+    exited=job.exited() if created else True
+    if caps['activeProcesses']!=0 or not exited:return
+    code=str(error);safe=code if type(error) is RuntimeError and 0<len(code)<=128 and all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:.-' for c in code) else 'DETAIL_REDACTED'
+    logs={};worker_code='UNKNOWN'
+    for name in ('worker.stdout','worker.stderr'):
+        path=root/name
+        if path.is_file():
+            need(path.stat().st_size<=33554432,'FAILURE_LOG_BOUND');logs[name]={'bytes':path.stat().st_size,'sha256':sha(path)}
+            if name=='worker.stderr':
+                with path.open('rb') as stream:stream.seek(max(0,path.stat().st_size-4096));tail=stream.read(4096)
+                try:
+                    value=json.loads(tail.decode('utf-8-sig').splitlines()[-1]);reason=value.get('reason','')
+                    if value.get('state')=='HOLD' and type(reason) is str and 0<len(reason)<=128 and all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:.-' for c in reason):worker_code=reason
+                except (ValueError,UnicodeError,IndexError,AttributeError):pass
+    value={'schema':'frl01-owned-ci-failure/v1','state':'FAILURE_WITH_ACTUAL_WINDOWS_JOB_TERMINAL_NOT_PRODUCT_PASS','sourceCommit':own['sourceCommit'],'sourceTree':own['sourceTree'],'jobId':own['jobId'],'rid':'win-x64','errorType':type(error).__name__,'code':safe,'workerCode':worker_code,'retainedWorkerTerminal':exited,'workerWasCreated':created,'workerExit':job.exit_code() if created else None,'ownedPopulation':caps['activeProcesses'],'actualJobCaps':caps,'actualBeforeResume':getattr(job,'beforeResume',None),'ownHeldProof':held,'logs':logs,'SDKProductSuccessInferred':False}
+    raw=json.dumps(value,indent=2).encode();need(len(raw)<=65536,'FAILURE_PROOF_BOUND');target=Path(own['checkout'])/'artifacts/host-proof';target.mkdir(parents=True,exist_ok=True)
+    with (target/'failure.json').open('xb') as f:f.write(raw)
+    candidates=[root/'bootstrap-context.json',root/'context.json',root/'held.json',root/'cpu-evidence.json',*list((root/'proof').glob('*.json'))]
+    need(sum(p.stat().st_size for p in candidates if p.is_file())+len(raw)<=8388608,'EXISTING_PROOF_ARTIFACT_LIMIT')
+    for source in candidates:
+        if source.is_file():need(source.stat().st_size<=2097152,'PROOF_FILE_LIMIT');(target/source.name).write_bytes(source.read_bytes())
+    return True
+
 def main():
     bootstrap_start_ns=time.monotonic_ns()
-    p=argparse.ArgumentParser();p.add_argument('--mode',choices=['sdk0-control','input-graph','product-ci'],required=True);p.add_argument('--admission',type=Path,required=True);p.add_argument('--admission-sha256',required=True);p.add_argument('--profile',type=Path,required=True);p.add_argument('--worker',action='store_true');p.add_argument('--context',type=Path);p.add_argument('--root',type=Path);p.add_argument('--token');p.add_argument('--remaining',type=float);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--mode',choices=['sdk0-control','input-only','input-graph','product-ci'],required=True);p.add_argument('--admission',type=Path,required=True);p.add_argument('--admission-sha256',required=True);p.add_argument('--profile',type=Path,required=True);p.add_argument('--worker',action='store_true');p.add_argument('--context',type=Path);p.add_argument('--root',type=Path);p.add_argument('--token');p.add_argument('--remaining',type=float);a=p.parse_args()
     need(sys.flags.isolated==1 and sys.flags.optimize==0,'ISOLATED_SOURCE_GUARDS')
     a.admission=a.admission.resolve();a.profile=a.profile.resolve()
     admission=load(a.admission);need(sha(a.admission)==a.admission_sha256 and admission['state']=='EXACT_SOURCE_INPUT_HOST_ROUTE_ADMITTED','NO_RUNTIME_ADMISSION')
@@ -179,28 +234,31 @@ def main():
     guard=module('frl01_ci_guard',HERE/'ci_host_guard.py',admission['sources']['guardSha256']);kernel=module('frl01_ci_kernel',HERE/'frl01_phase.py',admission['sources']['kernelSha256'])
     own=load(a.context) if a.worker else context(admission,guard)
     need(guard.observe_machine(own['hostClass'])['actualOSAccepted'],'ACTUAL_CURRENT_HOST')
-    hand=guard.handshake(admission,own);route=hand['route']
+    route=admission['routes'].get(own['hostClass']);need(type(route) is dict,'OWN_CORRESPONDING_ROUTE')
     if a.worker:return worker(a,admission,profile,guard,kernel,own,route,a.root,own['deadlineMonotonicNs']/1e9)
     import datetime
     began=datetime.datetime.fromisoformat(own['jobStartedAt'].replace('Z','+00:00')).timestamp();remaining=min(900,900-(time.time()-began));need(remaining>110,'ORIGINAL_JOB_REMAINING_BUDGET')
     now_ns=time.monotonic_ns();own['rowStartedMonotonicNs']=min(bootstrap_start_ns,now_ns-int((900-remaining)*1e9));own['deadlineMonotonicNs']=own['rowStartedMonotonicNs']+840000000000
-    own['supervisorPID']=os.getpid();own['supervisorStartIdentity']=('proc-start:' if os.name!='nt' else '')+kernel.start_id(os.getpid())
+    own['supervisorPID']=os.getpid();own['supervisorStartIdentity']=('proc-start:' if os.name!='nt' else 'FILETIME:')+kernel.start_id(os.getpid())
     deadline=own['deadlineMonotonicNs']/1e9
     temp=Path(os.environ['RUNNER_TEMP']).resolve();need(temp.is_dir() and not temp.is_symlink(),'PRIVATE_RUNNER_TEMP')
     token=secrets.token_hex(16);root=temp/('frl01-'+own['jobId']+'-'+token);root.mkdir(mode=0o700);(root/'proof').mkdir(mode=0o700)
     own['normalDirectory']=str(temp/('sdk11-normal-01-'+own['jobId']+'-'+token))
-    write(root/'context.json',own);write(root/'handshake.json',hand)
+    if os.name=='nt':own['jobName']='Local\\frl01-ci-'+own['jobId']+'-'+token
+    write(root/'bootstrap-context.json',own)
     write(root/'ownership.json',{'schema':'frl01-ci-job-ownership/v1','projectId':'01','jobId':own['jobId'],'instanceIdentity':own['instanceIdentity'],'ownerPID':os.getpid(),'ownerStart':kernel.start_id(os.getpid()),'token':token})
-    argv=[str(Path(sys.executable).resolve()),'-I','-B',str(Path(__file__).resolve()),'--worker','--mode',a.mode,'--admission',str(a.admission),'--admission-sha256',a.admission_sha256,'--profile',str(a.profile),'--context',str(root/'context.json'),'--root',str(root),'--token',token,'--remaining',str(max(1,deadline-time.monotonic()))]
-    job=client=None;unit=None;terminal=False;pidfd=None
+    argv=[str(Path(sys.executable).resolve()),'-I','-B',str(Path(__file__).resolve()),'--worker','--mode',a.mode,'--admission',str(a.admission),'--admission-sha256',a.admission_sha256,'--profile',str(a.profile),'--context',str(root/'bootstrap-context.json'),'--root',str(root),'--token',token,'--remaining',str(max(1,deadline-time.monotonic()))]
+    job=client=None;unit=None;terminal=False;pidfd=None;failure_closed=False
     try:
         if os.name=='nt':
             rate=min(10000,20000//os.cpu_count());need(rate>0,'CPU_RATE')
-            job=kernel.WindowsJob({'jobMemoryBytes':2147483648,'activeProcessLimit':32,'cpuRatePer10000':rate});job.launch(argv,Path(own['checkout']))
+            allowed=['SystemRoot','WINDIR','COMSPEC','PATHEXT','NUMBER_OF_PROCESSORS','PROCESSOR_ARCHITECTURE','GITHUB_ACTIONS','RUNNER_ENVIRONMENT','ImageOS','ImageVersion','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT','RUNNER_NAME','GITHUB_REPOSITORY','GITHUB_SHA','GITHUB_WORKSPACE','GITHUB_JOB','RUNNER_OS','RUNNER_TEMP']
+            env={k:os.environ[k] for k in allowed if k in os.environ};temp=root/'bootstrap-temp';temp.mkdir();env.update(TEMP=str(temp),TMP=str(temp),PATH='C:/Windows/System32;C:/Windows;C:/Program Files/Git/cmd',PYTHONDONTWRITEBYTECODE='1')
+            job=kernel.WindowsJob({'jobMemoryBytes':2147483648,'activeProcessLimit':32,'cpuRatePer10000':rate,'jobName':own['jobName']});job.launch(argv,Path(own['checkout']),env=env,logs=root)
         else:
             need(os.getuid()==own['uid']>0 and os.getgid()==own['gid']>0,'NONROOT_RUNNER')
             unit='frl01-ci-'+own['jobId']+'-'+token[:12]
-            observer=shlex.join([str(Path(sys.executable).resolve()),'-I','-B',str(Path(__file__).resolve()),'--own-stop-observer',str(root/'context.json'),str(root)])
+            observer=shlex.join([str(Path(sys.executable).resolve()),'-I','-B',str(Path(__file__).resolve()),'--own-stop-observer',str(root/'bootstrap-context.json'),str(root)])
             need(not any(c in observer for c in ['\n','\r','%','$']),'FIXED_OBSERVER_ARGV')
             hostenv=['--setenv='+key+'='+os.environ[key] for key in ['GITHUB_ACTIONS','RUNNER_ENVIRONMENT','ImageOS','ImageVersion','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT','RUNNER_NAME','GITHUB_REPOSITORY','GITHUB_SHA','GITHUB_WORKSPACE','GITHUB_JOB','RUNNER_OS','RUNNER_TEMP'] if key in os.environ]
             argv=['/usr/bin/sudo','-n','/usr/bin/systemd-run','--unit='+unit,'--uid='+str(own['uid']),'--gid='+str(own['gid']),'--wait','--pipe','--property=Type=exec','--property=ExecStopPost='+observer,'--property=CPUQuota=200%','--property=CPUQuotaPeriodSec=100ms','--property=SendSIGKILL=yes','--property=FinalKillSignal=SIGKILL','--property=MemoryMax=2147483648','--property=MemorySwapMax=0','--property=TasksMax=64','--property=KillMode=control-group','--property=TimeoutStopSec=5','--property=RuntimeMaxSec='+str(max(1,int(deadline-time.monotonic())-25)),*hostenv,*argv]
@@ -209,21 +267,26 @@ def main():
             need(not(job.exited() if job else client.poll() is not None),'WORKER_EXITED_BEFORE_HELD');need(time.monotonic()<deadline,'HELD_TIMEOUT');time.sleep(.05)
         held=load(root/'held.json');guard.own_caps(held,own)
         need(kernel.start_id(held['pid'])==held['startIdentity'],'HELD_PROCESS_START')
-        need(os.name!='nt','WINDOWS_NORMAL_DENIED')
-        pidfd=os.pidfd_open(held['pid']);stop_deadline=min(deadline,time.monotonic()+2)
-        while True:
-            raw=Path('/proc',str(held['pid']),'stat').read_text();state=raw[raw.rfind(')')+2:].split()[0]
-            if state in {'T','t'}:break
-            need(time.monotonic()<stop_deadline and client.poll() is None,'WAIT_ACTUAL_STOPPED_WORKER');time.sleep(.01)
-        need(state in {'T','t'} and not select.select([pidfd],[],[],0)[0],'ACTUAL_STOPPED_RETAINED_WORKER')
-        group=Path('/proc',str(held['pid']),'cgroup').read_text();expected='/system.slice/'+unit+'.service';need(('0::'+expected) in group.splitlines(),'OWN_STOPPED_SYSTEM_UNIT')
-        limits={k:(Path('/sys/fs/cgroup')/expected.lstrip('/')/k).read_text().strip() for k in ['memory.max','memory.swap.max','pids.max','cpu.max']}
-        need(limits=={'memory.max':'2147483648','memory.swap.max':'0','pids.max':'64','cpu.max':'200000 100000'},'OWN_STOPPED_KERNEL_LIMITS')
-        before={'pid':held['pid'],'processStartIdentity':'proc-start:'+held['startIdentity'],'cgroup':expected,'kernelLimits':limits,'state':'T','membershipBeforeRelease':True,'retainedStartHandle':True}
+        if os.name=='nt':
+            before=job.beforeResume
+            need(before['pid']==job.pid,'OWN_RETAINED_WINDOWS_WORKER')
+            cpu=load(root/'cpu-evidence.json');own['cpuEvidenceSha256']=validate_windows_held_cpu(held,before,cpu,sha(root/'cpu-evidence.json'));own['cpuV2']=True
+        else:
+            pidfd=os.pidfd_open(held['pid']);stop_deadline=min(deadline,time.monotonic()+2)
+            while True:
+                raw=Path('/proc',str(held['pid']),'stat').read_text();state=raw[raw.rfind(')')+2:].split()[0]
+                if state in {'T','t'}:break
+                need(time.monotonic()<stop_deadline and client.poll() is None,'WAIT_ACTUAL_STOPPED_WORKER');time.sleep(.01)
+            need(state in {'T','t'} and not select.select([pidfd],[],[],0)[0],'ACTUAL_STOPPED_RETAINED_WORKER')
+            group=Path('/proc',str(held['pid']),'cgroup').read_text();expected='/system.slice/'+unit+'.service';need(('0::'+expected) in group.splitlines(),'OWN_STOPPED_SYSTEM_UNIT')
+            limits={k:(Path('/sys/fs/cgroup')/expected.lstrip('/')/k).read_text().strip() for k in ['memory.max','memory.swap.max','pids.max','cpu.max']}
+            need(limits=={'memory.max':'2147483648','memory.swap.max':'0','pids.max':'64','cpu.max':'200000 100000'},'OWN_STOPPED_KERNEL_LIMITS')
+            before={'pid':held['pid'],'processStartIdentity':'proc-start:'+held['startIdentity'],'cgroup':expected,'kernelLimits':limits,'state':'T','membershipBeforeRelease':True,'retainedStartHandle':True}
+        hand=guard.handshake(admission,own);write(root/'context.json',own);write(root/'handshake.json',hand)
         write(root/'normal-caps-evidence.json',actual_normal_evidence(own,held,before))
         write(root/'consumer-host-admission.json',guard.consumer_record(admission,own,sha(root/'normal-caps-evidence.json')))
         write(root/'release-held.json',{'token':token,'heldSha256':sha(root/'held.json')})
-        signal.pidfd_send_signal(pidfd,signal.SIGCONT)
+        if os.name!='nt':signal.pidfd_send_signal(pidfd,signal.SIGCONT)
         while (not job.exited()) if job else (client.poll() is None):
             need(time.monotonic()<deadline,'ROW_DEADLINE');kernel.size_budget({'checkout':own['checkout'],'outputRoot':str(root),'extraOutputRoots':[own['normalDirectory']]},root)
             logs=sum(p.stat().st_size for p in root.rglob('*') if p.is_file() and p.suffix in {'.stdout','.stderr','.log'});need(logs<=33554432,'AGGREGATE_LOG_LIMIT');time.sleep(.1)
@@ -242,17 +305,18 @@ def main():
         need(terminal,'NO_ACTUAL_TERMINAL_PROOF_NO_UPLOAD')
         # Publish only bounded existing proof/application outputs after own terminal proof.
         target=Path(own['checkout'])/'artifacts/host-proof';target.mkdir(parents=True,exist_ok=False)
-        sources=[root/'stop-outcome.json',root/'normal-caps-evidence.json',root/'consumer-host-admission.json',root/'context.json',root/'handshake.json',root/'held.json',root/'worker-result.json',root/'terminal.json'];need(sum(p.stat().st_size for p in sources)<=8388608,'EXISTING_PROOF_ARTIFACT_LIMIT')
+        sources=([root/'stop-outcome.json'] if os.name!='nt' else [root/'cpu-evidence.json'])+[root/'normal-caps-evidence.json',root/'consumer-host-admission.json',root/'context.json',root/'handshake.json',root/'held.json',root/'worker-result.json',root/'terminal.json'];need(sum(p.stat().st_size for p in sources)<=8388608,'EXISTING_PROOF_ARTIFACT_LIMIT')
         sources.extend((root/'proof').glob('*.json'))
         need(sum(p.stat().st_size for p in sources)<=8388608,'EXISTING_PROOF_ARTIFACT_LIMIT')
         for source in sources:
             need(source.stat().st_size<=2097152,'PROOF_FILE_LIMIT');(target/source.name).write_bytes(source.read_bytes())
     except BaseException as error:
+        failure_closed=capture_windows_failure(error,root,own,locals().get('held'),job) is True
         capture_linux_failure(error,root,own,locals().get('held'),unit,client,pidfd)
         raise
     finally:
         if job:
-            if not terminal:job.terminate()
+            if not terminal and not failure_closed:job.terminate()
             job.close()
         if pidfd is not None:
             if not terminal and not select.select([pidfd],[],[],0)[0]:signal.pidfd_send_signal(pidfd,signal.SIGKILL)

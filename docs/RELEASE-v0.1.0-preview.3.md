@@ -50,3 +50,5 @@ The required Windows producer host fact is now observed in run44083510897/source
 The original input-graph allocation is wired to the existing controlled CI row with exact external admission provisioning. Six SDK data commands precede graph-specific input acquisition and lock sealing; their execution result remains pending. This adds no workflow/job/artifact/cache, global readiness, package upgrade or product acceptance.
 
 Exact common source4dab824 and its62 shared files are integrated. The unchanged public API now covers both accepted SDK host histories. This source composition alone does not admit the product's graph/locks/native dependencies or imply successful product CI/release.
+
+The six real own Linux SDK graph commands passed in CI44091385829 under original2GiB/CPU2/64/swap0 controls; no package acquisition/restore/build/product test occurred. Current Windows own-input binding is implemented through the exact shared API and original2GiB/CPU2/32-process named Job, with zero SDK target commands in `input-only`. Its runtime result and all product package/lock/regression/release gates remain pending.
