@@ -259,3 +259,9 @@ The parent still requires the retained worker pidfd to be terminal and actual
 zero population (or the same group absent only after that durable stop cause).
 No missing-state fallback alone grants terminality; no root cleanup or repair
 is introduced. This source route still needs its actual-host gate.
+
+### Actual Windows producer host fact (2026-11-17)
+
+Producer job [44083510897](https://github.com/pouriajamali/data-admission-gate/actions/runs/44083510897), signed source `86dcda2c`, completed all eight fixed SDK11 commands on Windows Server2025 (`win25-vs2026`) with exit0 and no remaining owned process. Exact immutable fact and observed job metadata are tracked under `tools/sdk11-normal/accepted-windows-*.json`. The owner host model accepts only `win25` and this observed `win25-vs2026` image token, together with its existing actual Server2025/26100 predicates. This producer used4GiB/CPU2/64 processes; this product still requires its own2GiB/CPU2/32-process Job.
+
+The current shared transport/catalog still denies Windows materialization; that sole producer-owned interface must incorporate the new fact before this consumer can activate it. No product lock, regression, package, compatibility or release result follows from the host fact. The shared Linux full-curation run44082565011 supplies reusable input evidence after its final immutable producer handoff; no further owner01 Core/Host job is planned. Preview.3 remains unpublished.

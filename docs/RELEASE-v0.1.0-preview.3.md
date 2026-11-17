@@ -44,3 +44,5 @@ requires the outer wrapper's actual terminal/descendant proof. This source inter
 has not been run or qualified and must be reviewed with the real allocation before
 any helper/native invocation. No example control file or fabricated native hash is
 provided as an admission artifact.
+
+The required Windows producer host fact is now observed in run44083510897/source86dcda2c (eight fixed commands exit0, owned processes0). It is immutable host history, not this product's2GiB/CPU2/32-process admission or a product test/release. Shared Windows normal transport and exact owner input/held-runtime admission remain pending; preview.3 has no download yet.

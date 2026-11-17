@@ -8,6 +8,9 @@ from pathlib import Path
 HOSTS = {'GitHubHostedWindowsServer2025x64': ('win-x64', 'win25'),
          'GitHubHostedUbuntu24.04x64': ('linux-x64', 'ubuntu24')}
 DESIGN = '9b3e0f376c5381b623f6a0f007bf6a6bb44f3dcbd1c2e4654de949a1eb97eec8'
+HOST_IMAGES = {'GitHubHostedWindowsServer2025x64': frozenset(('win25', 'win25-vs2026')),
+               'GitHubHostedUbuntu24.04x64': frozenset(('ubuntu24',))}
+
 
 def need(ok, code):
     if not ok: raise RuntimeError(code)
@@ -80,7 +83,7 @@ def model(fact, acceptance, route, own):
     need(acceptance['runId']==int(fact['qualifiedOn']['runId']) and any(x['status']=='completed' and x['conclusion']=='success' for x in acceptance['jobs']) and route['producerQualifiedOn']==fact['qualifiedOn'],'PRODUCER_ACCEPTANCE')
     need(route['archive']==fact['archive'] and target['memberManifestSha256']==fact['tree']['memberManifestSha256'],'ARTIFACT_IDENTITY')
     need(target['sdk']==fact['toolchain']['sdk'] and target['runtime']==fact['toolchain']['runtime'],'ADMITTED_TOOLCHAIN')
-    need(own['runnerEnvironment']=='github-hosted' and own['imageOS']==image and own['machine']=='x86_64','ACTUAL_HOST_IMAGE')
+    need(own['runnerEnvironment']=='github-hosted' and own['imageOS'] in HOST_IMAGES[host] and own['machine']=='x86_64','ACTUAL_HOST_IMAGE')
     need(not own['container'] and not own['wsl'] and own['actualOSAccepted'],'NO_LOCAL_CONTAINER_FALLBACK')
     need(own['sourceCommit']==route['sourceCommit'] and own['sourceTree']==route['sourceTree'] and own['dirty'] is False,'SOURCE_SUBJECT')
     need(all(own[k]==target[k] for k in ['contractSha256','sourcePinTableSha256','controllerSha256','profileSha256']),'OWN_CONTROL_IDENTITY')

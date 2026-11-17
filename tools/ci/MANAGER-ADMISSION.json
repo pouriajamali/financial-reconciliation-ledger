@@ -8,7 +8,7 @@
   "contractSha256": "a680c2d0cca7be2d813c6ef8d2e79668a4f75166f61bd08da28cad735a8fc55c",
   "profileSha256": "2dd04fd545ceebe44735f278310c6a2e77e36c3f584c1785fc9bd9df86588909",
   "sources": {
-    "guardSha256": "8580e5017d99b372c41d650ab9db870cba5660df31d0f915ae2150248fce6fba",
+    "guardSha256": "967a9e208c9ab6607283f3809bdbe6387989ad11feb52a0b3899e26c399d7d9d",
     "controllerSha256": "d4c7bb0056fa8648e9174bee8a38f1393f7e7584b42e99cc704ca88ea070292e",
     "pipelineSha256": "42a24621f4f810f6ab494a23ccc2fbf14cf00d034822849bda9965cf4636b78c",
     "kernelSha256": "9ecc6d75f04e2fe1e2890a5599112d9d34e8d44c8ad4abeeea9e4c64e382b200",
@@ -41,7 +41,17 @@
       "sourceCommit": null,
       "sourceTree": null,
       "archive": null,
-      "acceptedCatalog": null
+      "acceptedCatalog": null,
+      "producerSourceReference": {
+        "fact": {
+          "path": "E:\\Codex WorkSpace\\Git Projects\\financial-reconciliation-ledger\\tech-refresh-implementation-20261114\\tools\\sdk11-normal\\accepted-windows-fact.json",
+          "sha256": "ec8e9b405ca74bd7bbc748575265de2555056d84ff5780a8979bbb01cbd27c48"
+        },
+        "acceptance": {
+          "path": "E:\\Codex WorkSpace\\Git Projects\\financial-reconciliation-ledger\\tech-refresh-implementation-20261114\\tools\\sdk11-normal\\accepted-windows-acceptance.json",
+          "sha256": "9713a70f809ac7f50a1c73650fc6d3390bccda109e7a2d15c9be581ff91dc8f6"
+        }
+      }
     },
     "GitHubHostedUbuntu24.04x64": {
       "status": "PENDING_OWN_EXACT_SOURCE_PROFILE_AND_HELD_EVIDENCE_GATE",

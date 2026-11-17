@@ -57,7 +57,7 @@
     {
       "path": "README.md",
       "mode": "100644",
-      "gitBlob": "644863588f318122da426c64f93516ce1cb70152"
+      "gitBlob": "13e52d7255804ac6a5852ac97e86cb9b34a74e54"
     },
     {
       "path": "SIGNING-PUBLIC-KEY.pub",
@@ -97,7 +97,7 @@
     {
       "path": "docs/RELEASE-v0.1.0-preview.3.md",
       "mode": "100644",
-      "gitBlob": "804ca2cbf8974e20b74506909bbf16a5543e2e6d"
+      "gitBlob": "e42707d10ba44110c9b111739f9e02bf6adcecfd"
     },
     {
       "path": "docs/SDK11-OWN-ROUTE-CONTRACT.json",
@@ -187,7 +187,7 @@
     {
       "path": "tools/ci/MANAGER-ADMISSION.json",
       "mode": "100644",
-      "gitBlob": "4d371bc4202d9613cd78cb8478d321b23c4548cd"
+      "gitBlob": "11e03c89fba98edca2236310019a75df9ad0c0e5"
     },
     {
       "path": "tools/ci/PROFILE.json",
@@ -202,7 +202,7 @@
     {
       "path": "tools/ci/ci_host_guard.py",
       "mode": "100644",
-      "gitBlob": "76296c3379c17f86a89a1f6309331d019eedd8c3"
+      "gitBlob": "6d3f5d28888e82fe191edf69a17ecb43c1f57cc0"
     },
     {
       "path": "tools/ci/ci_pipeline.py",
@@ -233,6 +233,11 @@
       "path": "tools/ci/test_ci_normal_binding.py",
       "mode": "100644",
       "gitBlob": "ae8d29cc2c2da9d2be78e31c11635d428f9f2955"
+    },
+    {
+      "path": "tools/ci/test_ci_windows_image.py",
+      "mode": "100644",
+      "gitBlob": "243ce2f44f823da74060d875a3a2bcd4af168433"
     },
     {
       "path": "tools/dotnet11-host-qualification.schema.json",
@@ -273,6 +278,16 @@
       "path": "tools/sdk11-normal/accepted-linux-fact.json",
       "mode": "100644",
       "gitBlob": "391173426f2a48f2fb9797d70cc7cb618bd5ffaf"
+    },
+    {
+      "path": "tools/sdk11-normal/accepted-windows-acceptance.json",
+      "mode": "100644",
+      "gitBlob": "cc193e041bcd13a024374e23df11c1cb850203a9"
+    },
+    {
+      "path": "tools/sdk11-normal/accepted-windows-fact.json",
+      "mode": "100644",
+      "gitBlob": "ac16ecce10590289223afcdaa9da2b815bb76493"
     }
   ],
   "projectionOnly": true,
