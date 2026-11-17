@@ -13,12 +13,31 @@ def sha(path):
         for data in iter(lambda:stream.read(1048576),b''): h.update(data)
     return h.hexdigest()
 
+
+def wait_own_command_children(name,end):
+    # Only own named Job; observe natural child/hidden-console termination.
+    # No additional PID is admitted to the next shared MainPID-only call.
+    import ctypes
+    from ctypes import wintypes as W
+    need(name.startswith('Local\\frl01-ci-') and len(name)<=180,'OWN_COMMAND_JOB_NAME')
+    K=ctypes.WinDLL('kernel32',use_last_error=True);K.OpenJobObjectW.argtypes=[W.DWORD,W.BOOL,W.LPCWSTR];K.OpenJobObjectW.restype=W.HANDLE;K.CloseHandle.argtypes=[W.HANDLE];K.GetCurrentProcess.restype=W.HANDLE;K.IsProcessInJob.argtypes=[W.HANDLE,W.HANDLE,ctypes.POINTER(W.BOOL)];K.QueryInformationJobObject.argtypes=[W.HANDLE,ctypes.c_int,ctypes.c_void_p,W.DWORD,ctypes.c_void_p]
+    class Accounting(ctypes.Structure):_fields_=[('u',ctypes.c_longlong),('k',ctypes.c_longlong),('pu',ctypes.c_longlong),('pk',ctypes.c_longlong),('faults',W.DWORD),('total',W.DWORD),('active',W.DWORD),('terminated',W.DWORD)]
+    job=K.OpenJobObjectW(4,False,name);need(job,'OWN_COMMAND_JOB_QUERY')
+    try:
+        member=W.BOOL();need(K.IsProcessInJob(K.GetCurrentProcess(),job,ctypes.byref(member)) and member.value,'OWN_COMMAND_CURRENT_MEMBERSHIP')
+        while True:
+            account=Accounting();need(K.QueryInformationJobObject(job,1,ctypes.byref(account),ctypes.sizeof(account),None),'OWN_COMMAND_CHILD_READBACK')
+            if account.active==1:return
+            need(time.monotonic()<end,'OWN_COMMAND_CHILD_TERMINAL_UNOBSERVED');time.sleep(.02)
+    finally:K.CloseHandle(job)
+
 def run(argv, cwd, env, directory, name, seconds, deadline):
     remaining=min(seconds,deadline-time.monotonic())
     need(remaining>0,'ROW_DEADLINE')
     out,err=directory/(name+'.stdout'),directory/(name+'.stderr')
+    if os.name=='nt':need(type(env.get('FRL01_OWN_JOB_NAME')) is str,'OWN_COMMAND_JOB_CONTEXT')
     with out.open('xb') as stdout,err.open('xb') as stderr:
-        p=subprocess.Popen(argv,cwd=cwd,env=env,stdin=subprocess.DEVNULL,stdout=stdout,stderr=stderr,creationflags=(subprocess.DETACHED_PROCESS if os.name=='nt' else 0))
+        p=subprocess.Popen(argv,cwd=cwd,env=env,stdin=subprocess.DEVNULL,stdout=stdout,stderr=stderr,creationflags=(subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0))
         began=time.monotonic()
         try:
             while p.poll() is None:
@@ -28,6 +47,7 @@ def run(argv, cwd, env, directory, name, seconds, deadline):
             code=p.wait(timeout=5)
         finally:
             if p.poll() is None:p.kill();p.wait(timeout=5)
+    if os.name=='nt':wait_own_command_children(env['FRL01_OWN_JOB_NAME'],min(deadline,began+remaining,time.monotonic()+2))
     need(code==0,'STAGE_EXIT_'+name)
     for path in [out,err]:
         need(path.stat().st_size<=33554432,'LOG_LIMIT')
@@ -116,6 +136,7 @@ def native_prerequisites(sdk,checkout,env,proof,deadline):
 def pipeline(route,context,root,proof,deadline,normal,normal_context,normal_directory):
     checkout=Path(context['checkout']);python=str(Path(sys.executable).resolve());rid=context['rid']
     env=sdk_environment(root)
+    if rid=='win-x64':env['FRL01_OWN_JOB_NAME']=context['jobName']
     # Full product row requires reviewed net11 locks beforehand. No unlocked fallback.
     for p in [checkout/'src/Ledger/packages.lock.json',checkout/'tests/Ledger.Tests/packages.lock.json']:
         need(set(json.loads(p.read_text(encoding='utf-8-sig'))['dependencies'])=={'net11.0'},'NET11_LOCK_INPUT_NOT_SEALED')
@@ -243,7 +264,7 @@ def windows_native_prerequisites(sdk,checkout,env,proof,deadline):
 
 
 def input_only(route,context,root,proof,deadline,normal,normal_context,normal_directory):
-    need(context['rid']=='win-x64','OWN_WINDOWS_INPUT_ONLY_SCOPE');env=sdk_environment(root)
+    need(context['rid']=='win-x64','OWN_WINDOWS_INPUT_ONLY_SCOPE');env=sdk_environment(root);env['FRL01_OWN_JOB_NAME']=context['jobName']
     with stage_alarm(150,deadline,normal,normal_context):
         (proof/'windows-input-stage.json').write_text(json.dumps({'schema':'frl01-own-input-stage/v1','stage':'BEFORE_SHARED_TRANSPORT','SDKExecutions':0}),encoding='utf-8')
         sdk,receipt=normal.transport('win-x64',normal_directory,normal_context);validate_normal_receipt(receipt,context,normal_context)
