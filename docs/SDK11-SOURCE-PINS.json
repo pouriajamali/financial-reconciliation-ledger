@@ -22,7 +22,7 @@
     {
       "path": ".github/workflows/verify.yml",
       "mode": "100644",
-      "gitBlob": "9e0a4cd362de5e7a55ebd237a6bcabd98cad205d"
+      "gitBlob": "e52f085dfcdca4d04b7e3af79e2b956d10a51816"
     },
     {
       "path": ".gitignore",
@@ -57,7 +57,7 @@
     {
       "path": "README.md",
       "mode": "100644",
-      "gitBlob": "fef6fa3e6083a3f81b32093fe598a5218f23f153"
+      "gitBlob": "45cabe416695a32749430caad37948965e06c6ef"
     },
     {
       "path": "SIGNING-PUBLIC-KEY.pub",
@@ -97,7 +97,7 @@
     {
       "path": "docs/RELEASE-v0.1.0-preview.3.md",
       "mode": "100644",
-      "gitBlob": "099ddf6309d77c21a1f4967a7ff4ab4bd7be1fc1"
+      "gitBlob": "0979a3f9fec7f9e6c561ca1d4593cc70d4307fda"
     },
     {
       "path": "docs/SDK11-OWN-ROUTE-CONTRACT.json",

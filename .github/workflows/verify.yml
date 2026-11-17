@@ -72,7 +72,7 @@ jobs:
           FRL01_ADMISSION_TEMPLATE_SHA256: ${{ inputs.admission_sha256 }}
           FRL01_PHASE: ${{ inputs.phase || 'product-ci' }}
         run: |
-          $python = if ($IsWindows) { (Get-Command python -CommandType Application -ErrorAction Stop).Source } else { '/usr/bin/python3' }
+          $python = if ($IsWindows) { (Get-Command python -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source } else { '/usr/bin/python3' }
           $admission = $env:FRL01_CI_ADMISSION_PATH
           $hash = $env:FRL01_CI_ADMISSION_SHA256
           if ($env:FRL01_ADMISSION_JSON) {
