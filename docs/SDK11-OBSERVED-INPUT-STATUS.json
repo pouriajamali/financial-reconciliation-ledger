@@ -1,0 +1,124 @@
+{
+  "schema": "frl01-observed-upgrade-input-status/v1",
+  "state": "OWN_CURRENT_SDK_INPUT_GATES_OBSERVED_PRODUCT_PACKAGE_ADMISSION_PENDING",
+  "sharedSourceHEAD": "4dab824c2b0b6fe00858f648d07fd8e9df9fafe1",
+  "sharedFilesExact": 62,
+  "producerHostQualification": {
+    "LinuxRun": 43920284996,
+    "WindowsRun": 44083510897,
+    "boundary": "Immutable host history only; no producer caps transferred."
+  },
+  "ownLinuxGraph": {
+    "sourceHEAD": "95b69315d5c9cbec5ceef5799ab04faa984f9adf",
+    "runId": 44091385829,
+    "URL": "https://github.com/pouriajamali/financial-reconciliation-ledger/actions/runs/44091385829",
+    "SDKDataCommandsExit0": 6,
+    "elapsedWithinOriginal100sSlot": 23.11121286800001,
+    "memoryBytes": 2147483648,
+    "cpuEquivalent": 2,
+    "tasksMax": 64,
+    "swapBytes": 0,
+    "terminalObserved": true,
+    "restores": 0,
+    "productBuildsOrTests": 0
+  },
+  "ownWindowsInputOnly": {
+    "sourceHEAD": "6a877ecc7bb213f8b796cf769d02b67b6971ebea",
+    "runId": 44101084380,
+    "URL": "https://github.com/pouriajamali/financial-reconciliation-ledger/actions/runs/44101084380",
+    "SDKExecutions": 0,
+    "memoryBytes": 2147483648,
+    "cpuEquivalent": 2,
+    "processLimit": 32,
+    "retainedSuspendedIdentityObserved": true,
+    "currentNamedJobAndParentObserved": true,
+    "ownCpuV2AllowedProcessors": 4,
+    "fullSDKNamespaceAndRawIdentityObserved": true,
+    "currentPEImportsAndTimestampedMicrosoftPublishers": 5,
+    "ownedPopulationAtTerminal": 0
+  },
+  "missingAdmission": {
+    "WindowsNativeNuget11": [
+      {
+        "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
+        "version": "[11.0.0, 11.0.0]"
+      },
+      {
+        "name": "Microsoft.NETCore.App.Host.win-x64",
+        "version": "[11.0.0, 11.0.0]"
+      },
+      {
+        "name": "Microsoft.NETCore.App.Runtime.win-x64",
+        "version": "[11.0.0, 11.0.0]"
+      }
+    ],
+    "frozenOrdinaryNodes": [
+      {
+        "id": "Microsoft.Data.Sqlite",
+        "version": "10.0.15",
+        "normalizedContentHash": "PtnNCUloQOLAXhB09id+0CL2c9yd+9/wi0QHCHPa+zrTKEJTdu07jlUgblFjorYhKnwcHN1VS0z75jN8vFruuQ==",
+        "dependencies": {
+          "Microsoft.Data.Sqlite.Core": "10.0.15",
+          "SQLitePCLRaw.bundle_e_sqlite3": "2.1.13",
+          "SQLitePCLRaw.core": "2.1.13"
+        }
+      },
+      {
+        "id": "Microsoft.Data.Sqlite.Core",
+        "version": "10.0.15",
+        "normalizedContentHash": "mjDz/zleAF78J1KRN9FludN2bzbsMWoXYSLVcawADle7RBhZYpFZYivGRvbvlH/RtXT/gjO0yhG99tzdFiET+A==",
+        "dependencies": {
+          "SQLitePCLRaw.core": "2.1.13"
+        }
+      },
+      {
+        "id": "SQLitePCLRaw.bundle_e_sqlite3",
+        "version": "2.1.13",
+        "normalizedContentHash": "NlDixlC7uHmo+ojXRgkNvN0tQtVGpLDZ3x2OpgNj+G07VHh5cXSszFDrAiC4BpUiPwkcaeuQkMV9WQ123xVtmQ==",
+        "dependencies": {
+          "SQLitePCLRaw.lib.e_sqlite3": "2.1.13",
+          "SQLitePCLRaw.provider.e_sqlite3": "2.1.13"
+        }
+      },
+      {
+        "id": "SQLitePCLRaw.core",
+        "version": "2.1.13",
+        "normalizedContentHash": "2joofoinuHBFs0nMX3nKuXgxpXryRkCOdM2Ua6HBqQLLy6IW+5f28ZI+HAvMyF8vG7XfNz/lwfBfE6V4juru8Q==",
+        "dependencies": {}
+      },
+      {
+        "id": "SQLitePCLRaw.lib.e_sqlite3",
+        "version": "2.1.13",
+        "normalizedContentHash": "D2UAuiGxFYBqeRXjjjGgvJ5UQifzn6wefmSqeKU7XcNGKLbJRP6X7kcPZ6opOBJGdCIlgbSxTvDpBbLvsN594A==",
+        "dependencies": {}
+      },
+      {
+        "id": "SQLitePCLRaw.provider.e_sqlite3",
+        "version": "2.1.13",
+        "normalizedContentHash": "ZU60dSqoSNRe49KcQDUmOVgdRtjITOssVXFtiISs+zJXDI4D2Sndwpn2NOtzDQNPu0ZAvpoLPQ+GLKv6iEZn8Q==",
+        "dependencies": {
+          "SQLitePCLRaw.core": "2.1.13"
+        }
+      }
+    ],
+    "required": "Current exact signed raw/CMS/timestamp/revocation, authoritative normalized hash, original notices/current native+managed advisory and graph-specific identity-bound input evidence. Host qualification is not these package facts."
+  },
+  "actualGraphBoundary": "ASP.NET runtime is an SDK download dependency for self-contained publish; the application FrameworkReference remains only Microsoft.NETCore.App. Linux shared facts cover its required native download set; no behavior is reduced to pass.",
+  "stillRequired": [
+    "Actual generated/reviewed net11 portable and RID locks; do not rename net10 framework keys or invent hashes.",
+    "Original Windows144/Linux145 product regressions,22 extracted checks and14 literal compatibility scenarios perRID under original limits.",
+    "Exact final-source product CI, tested preview3/distributables and known-key signatures, actual downloads/checksums and synchronized public metadata."
+  ],
+  "SDK_READY": false,
+  "productAdmission": false,
+  "upgradeDelivered": false,
+  "currentOwnerDeliveryBoundary": {
+    "effectiveAtUtc": "2026-11-17T14:26:39.234885+00:00",
+    "GitHubActions": "No new dispatch/rerun/push/PR/tag/release-triggered execution until fresh owner instruction.",
+    "finalHeadCI": "Not run per current owner instruction; earlier input CI is historical evidence only.",
+    "localWork": "Only already authorized local work with actually admitted inputs/hosts/caps; no unsupported local SDK fallback.",
+    "push": "Signed task-only commit and safe existing branch push with [skip ci]; workflow/protection/billing/security settings unchanged.",
+    "publication": "No new tag/release/PR/merge; existing publication pipeline depends on Actions and remains blocked.",
+    "upgradeDelivered": false
+  }
+}

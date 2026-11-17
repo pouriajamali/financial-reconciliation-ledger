@@ -57,7 +57,7 @@
     {
       "path": "README.md",
       "mode": "100644",
-      "gitBlob": "4a92f34276deb49eff82601a2f10ca337ec78d2a"
+      "gitBlob": "42ce3c2c8320b3eee93ac248ad1dfc02d543d444"
     },
     {
       "path": "SIGNING-PUBLIC-KEY.pub",
@@ -97,7 +97,12 @@
     {
       "path": "docs/RELEASE-v0.1.0-preview.3.md",
       "mode": "100644",
-      "gitBlob": "9dc9bbf58509b06e1c68373ff16203d0bcd31dcf"
+      "gitBlob": "43b5be73860f465c95a352d5ed29ab2ec0f9d3a6"
+    },
+    {
+      "path": "docs/SDK11-OBSERVED-INPUT-STATUS.json",
+      "mode": "100644",
+      "gitBlob": "0f75200148fde789886ff6c6b585f333807fc21c"
     },
     {
       "path": "docs/SDK11-OWN-ROUTE-CONTRACT.json",
