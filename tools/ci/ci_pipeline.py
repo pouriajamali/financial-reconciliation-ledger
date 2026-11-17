@@ -18,7 +18,7 @@ def run(argv, cwd, env, directory, name, seconds, deadline):
     need(remaining>0,'ROW_DEADLINE')
     out,err=directory/(name+'.stdout'),directory/(name+'.stderr')
     with out.open('xb') as stdout,err.open('xb') as stderr:
-        p=subprocess.Popen(argv,cwd=cwd,env=env,stdin=subprocess.DEVNULL,stdout=stdout,stderr=stderr)
+        p=subprocess.Popen(argv,cwd=cwd,env=env,stdin=subprocess.DEVNULL,stdout=stdout,stderr=stderr,creationflags=(subprocess.DETACHED_PROCESS if os.name=='nt' else 0))
         began=time.monotonic()
         try:
             while p.poll() is None:

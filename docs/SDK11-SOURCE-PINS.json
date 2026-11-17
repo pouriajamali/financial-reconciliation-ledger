@@ -57,7 +57,7 @@
     {
       "path": "README.md",
       "mode": "100644",
-      "gitBlob": "45cabe416695a32749430caad37948965e06c6ef"
+      "gitBlob": "bdb93466006591e1f7caf95a91ad79ad28ba9825"
     },
     {
       "path": "SIGNING-PUBLIC-KEY.pub",
@@ -97,7 +97,7 @@
     {
       "path": "docs/RELEASE-v0.1.0-preview.3.md",
       "mode": "100644",
-      "gitBlob": "0979a3f9fec7f9e6c561ca1d4593cc70d4307fda"
+      "gitBlob": "2250a05538e40a7f6af11cc7bafc60dbc1d1cdd3"
     },
     {
       "path": "docs/SDK11-OWN-ROUTE-CONTRACT.json",
@@ -192,7 +192,7 @@
     {
       "path": "tools/ci/MANAGER-ADMISSION.json",
       "mode": "100644",
-      "gitBlob": "e96dcb9904bc2818addaad64328dcbd0c421fe04"
+      "gitBlob": "4af9b79722e20b59a42ebe62a7cd23abe85bf4ed"
     },
     {
       "path": "tools/ci/PROFILE.json",
@@ -207,7 +207,7 @@
     {
       "path": "tools/ci/ci_host_controller.py",
       "mode": "100644",
-      "gitBlob": "32aa17a0df51edd24d418532ff4c412465e0f5a3"
+      "gitBlob": "1b8304b6c7bf6e29616917f37802d5dda8a48570"
     },
     {
       "path": "tools/ci/ci_host_guard.py",
@@ -217,12 +217,12 @@
     {
       "path": "tools/ci/ci_pipeline.py",
       "mode": "100644",
-      "gitBlob": "293ae160f3486a5a4ca97b389b391245b0851a1b"
+      "gitBlob": "ecebd3cf513aca02b39911672bd63d4f62e57f51"
     },
     {
       "path": "tools/ci/frl01_phase.py",
       "mode": "100644",
-      "gitBlob": "8a57ceee20fe2bb11b343137d1b9964ec645b4ae"
+      "gitBlob": "7aaf5b1420bca40043d49499ecd62febb6defef8"
     },
     {
       "path": "tools/ci/host_boundary_fixtures.json",

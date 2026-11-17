@@ -86,9 +86,37 @@ def linux_caps():
     need(str(os.getpid()) in (group/'cgroup.procs').read_text().split(),'HELD_WORKER_MEMBERSHIP')
     return {'cgroup':str(group),'cpu.max':cpu,'memory.max':memory,'memory.swap.max':swap,'pids.max':tasks}
 
+
+def observe_windows_bootstrap_members(root,own,kernel):
+    # Read only this dedicated named Job, before the shared strict single-main
+    # predicate. No global process inventory, cmdline/env, setter or SDK call.
+    from ctypes import wintypes as W
+    c=kernel.ctypes;K=c.WinDLL('kernel32',use_last_error=True)
+    K.OpenJobObjectW.argtypes=[W.DWORD,W.BOOL,W.LPCWSTR];K.OpenJobObjectW.restype=W.HANDLE
+    K.QueryInformationJobObject.argtypes=[W.HANDLE,c.c_int,c.c_void_p,W.DWORD,c.c_void_p]
+    K.CloseHandle.argtypes=[W.HANDLE];K.OpenProcess.argtypes=[W.DWORD,W.BOOL,W.DWORD];K.OpenProcess.restype=W.HANDLE
+    K.QueryFullProcessImageNameW.argtypes=[W.HANDLE,W.DWORD,W.LPWSTR,c.POINTER(W.DWORD)]
+    K.GetConsoleProcessList.argtypes=[c.POINTER(W.DWORD),W.DWORD];K.GetConsoleProcessList.restype=W.DWORD
+    class IDs(c.Structure):_fields_=[('assigned',W.DWORD),('listed',W.DWORD),('pids',c.c_size_t*64)]
+    handle=K.OpenJobObjectW(4,False,own['jobName']);need(handle,'OWN_BOOTSTRAP_JOB_QUERY')
+    try:
+        ids=IDs();need(K.QueryInformationJobObject(handle,3,c.byref(ids),c.sizeof(ids),None) and ids.assigned==ids.listed<=32,'OWN_BOOTSTRAP_MEMBER_BOUND');members=[]
+        for pid in ids.pids[:ids.listed]:
+            proc=K.OpenProcess(0x1000,False,pid);name='UNAVAILABLE'
+            if proc:
+                try:
+                    length=W.DWORD(32768);buf=c.create_unicode_buffer(length.value)
+                    if K.QueryFullProcessImageNameW(proc,0,buf,c.byref(length)):name=Path(buf.value).name
+                finally:K.CloseHandle(proc)
+            members.append({'pid':int(pid),'imageBaseName':name})
+        pids=(W.DWORD*64)();c.set_last_error(0);console_count=int(K.GetConsoleProcessList(pids,64));console_error=c.get_last_error() if console_count==0 else 0
+        write(root/'proof/windows-bootstrap-members.json',{'schema':'frl01-own-windows-bootstrap-members/v1','state':'OBSERVATION_ONLY_NOT_ADMISSION','jobName':own['jobName'],'currentPID':os.getpid(),'assigned':int(ids.assigned),'listed':int(ids.listed),'members':members,'consoleClientCount':console_count,'consoleQueryError':console_error})
+    finally:K.CloseHandle(handle)
+
 def worker(args,admission,profile,guard,kernel,own,route,root,deadline):
     watch=win=normal=None
     if os.name=='nt':
+        observe_windows_bootstrap_members(root,own,kernel)
         normal=module('frl01_shared_normal',HERE.parent/'check_dotnet11.py',NORMAL_MODULE_SHA)
         win=normal._load('normal_windows_input',normal.PINS['windowsNormalHelperSha256'])
         watch=win.OwnJob(normal,own,{'worker':{'jobName':own['jobName']}},own['deadlineMonotonicNs'])

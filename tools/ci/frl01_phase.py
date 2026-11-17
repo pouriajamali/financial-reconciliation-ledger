@@ -304,7 +304,7 @@ class WindowsJob:
         self.api.CreateProcessW.argtypes=[w.LPCWSTR,w.LPWSTR,ctypes.c_void_p,ctypes.c_void_p,w.BOOL,w.DWORD,ctypes.c_void_p,w.LPCWSTR,ctypes.c_void_p,ctypes.POINTER(Process)]
         self.api.GetProcessTimes.argtypes=[w.HANDLE,*([ctypes.POINTER(w.FILETIME)]*4)]
         self.api.GetActiveProcessorCount.argtypes=[w.WORD];self.api.GetActiveProcessorCount.restype=w.DWORD
-        handles=[];attribute_buffer=None;attributes_initialized=False;info=Process();startup=StartupEx();startup.startup.cb=ctypes.sizeof(StartupEx);flags=0x08000004
+        handles=[];attribute_buffer=None;attributes_initialized=False;info=Process();startup=StartupEx();startup.startup.cb=ctypes.sizeof(StartupEx);flags=0x0000000c
         try:
             if logs is not None:
                 self.api.CreateFileW.argtypes=[w.LPCWSTR,w.DWORD,w.DWORD,ctypes.POINTER(Security),w.DWORD,w.DWORD,w.HANDLE];self.api.CreateFileW.restype=w.HANDLE
@@ -329,7 +329,7 @@ class WindowsJob:
             try:
                 need(self.api.AssignProcessToJobObject(self.job,info.process),'Suspended child job membership failed');readback=self.readback();need(readback['activeProcesses']==1,'Suspended child not sole job member')
                 times=[w.FILETIME() for _ in range(4)];need(self.api.GetProcessTimes(info.process,*[ctypes.byref(v) for v in times]),'OWN_RETAINED_START_IDENTITY')
-                self.beforeResume={'pid':int(info.pid),'processStartIdentity':'FILETIME:'+str((times[0].dwHighDateTime<<32)|times[0].dwLowDateTime),'jobName':self.jobName,'memoryMaxBytes':readback['jobMemoryBytes'],'tasksMax':readback['processLimit'],'cpuRate':readback['cpuRatePer10000'],'logicalHostCpu':int(self.api.GetActiveProcessorCount(0xffff)),'state':'SUSPENDED','membershipBeforeRelease':True,'retainedStartHandle':True}
+                self.beforeResume={'pid':int(info.pid),'processStartIdentity':'FILETIME:'+str((times[0].dwHighDateTime<<32)|times[0].dwLowDateTime),'jobName':self.jobName,'memoryMaxBytes':readback['jobMemoryBytes'],'tasksMax':readback['processLimit'],'cpuRate':readback['cpuRatePer10000'],'logicalHostCpu':int(self.api.GetActiveProcessorCount(0xffff)),'state':'SUSPENDED','membershipBeforeRelease':True,'retainedStartHandle':True,'creationFlags':flags,'consoleMode':'DETACHED_PROCESS_WITH_FIXED_REDIRECTED_HANDLES'}
                 need(self.api.ResumeThread(info.thread)!=0xffffffff,'Owned child resume failed')
             except BaseException:
                 killed=self.api.TerminateProcess(info.process,1);self.unassignedChildTerminal=bool(killed and self.api.WaitForSingleObject(info.process,5000)==0);self.api.CloseHandle(info.process);raise
