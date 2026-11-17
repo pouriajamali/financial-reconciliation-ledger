@@ -102,7 +102,7 @@ def worker(args,admission,profile,guard,kernel,own,route,root,deadline):
     signal.signal(signal.SIGALRM,lambda *_:(_ for _ in ()).throw(RuntimeError('ORIGINAL_ROW_DEADLINE')))
     signal.setitimer(signal.ITIMER_REAL,max(.000001,deadline-time.monotonic()))
     result={'state':'SDK0_CONTROL_ONLY','SDKLaunches':0}
-    if args.mode=='product-ci':
+    if args.mode in ('product-ci','input-graph'):
         if route.get('runNewSdk0ModelFixtures'):
             need(sha(HERE/'test_ci_host_guard.py')==admission['sources']['newTestSha256'] and sha(HERE/'host_boundary_fixtures.json')==admission['sources']['newFixtureSha256'],'NEW_TEST_SOURCE_FIXTURES')
             check=subprocess.run([str(Path(sys.executable).resolve()),'-I','-B',str(HERE/'test_ci_host_guard.py')],capture_output=True,timeout=min(40,max(.1,deadline-time.monotonic())))
@@ -117,7 +117,8 @@ def worker(args,admission,profile,guard,kernel,own,route,root,deadline):
         files={'admission':str(root/'consumer-host-admission.json'),'capsEvidence':str(root/'normal-caps-evidence.json'),'checkout':own['checkout'],'contract':str(Path(admission['ownContract']['path']).resolve()),'controller':str(Path(__file__).resolve()),'profile':str(args.profile),'sourcePins':str(Path(admission['sourcePinTable']['path']).resolve())}
         normal_context=normal_values(own,files,own,{'pid':own['supervisorPID'],'start':own['supervisorStartIdentity']})
         pipeline=module('frl01_ci_pipeline',HERE/'ci_pipeline.py',admission['sources']['pipelineSha256'])
-        result=pipeline.pipeline(route,own,root,root/'proof',deadline,normal,normal_context,Path(own['normalDirectory']))
+        execute=pipeline.input_graphs if args.mode=='input-graph' else pipeline.pipeline
+        result=execute(route,own,root,root/'proof',deadline,normal,normal_context,Path(own['normalDirectory']))
     signal.setitimer(signal.ITIMER_REAL,0)
     write(root/'worker-result.json',{'projectId':'01','result':result,'kernel':caps,'targetExit':0,'currentJobId':own['jobId'],'terminalParentProofPending':True})
     return 0
@@ -133,9 +134,44 @@ def own_stop_observer(context_path,root):
     write(root/'stop-outcome.json',{'schema':'frl01-own-nonroot-stop-outcome/v1','jobId':own['jobId'],'workerPID':held['pid'],'workerStartIdentity':held['startIdentity'],'observerPID':os.getpid(),'uid':os.getuid(),'gid':os.getgid(),'cgroup':relative,'actualCaps':caps,'serviceResult':os.environ.get('SERVICE_RESULT'),'exitCode':os.environ.get('EXIT_CODE'),'exitStatus':os.environ.get('EXIT_STATUS'),'populationObserved':population,'remainingPopulationExcludingObserver':len([pid for pid in population if pid!=os.getpid()]),'observedMonotonicNs':time.monotonic_ns(),'causeCapturedBeforeCollection':True})
     return 0
 
+
+def failed_aggregate_terminal(stop,own,held,unit,launcher_terminal,pidfd_terminal,group_absent,populated):
+    # Missing group is evidence only after the exact durable own stop record.
+    return (type(stop) is dict and type(held) is dict and launcher_terminal is True and pidfd_terminal is True
+        and stop.get('jobId')==own['jobId'] and stop.get('workerPID')==held['pid']
+        and stop.get('workerStartIdentity')==held['startIdentity'] and stop.get('cgroup')=='/system.slice/'+unit+'.service'
+        and stop.get('remainingPopulationExcludingObserver')==0 and stop.get('causeCapturedBeforeCollection') is True
+        and bool(stop.get('serviceResult')) and bool(stop.get('exitCode')) and stop.get('exitStatus') is not None
+        and (group_absent is True or populated=='0'))
+
+
+def capture_linux_failure(error,root,own,held,unit,client,pidfd):
+    # No global/service reset or root cleanup. Only retained own worker signal.
+    if os.name=='nt' or pidfd is None or unit is None or client is None:return
+    if not select.select([pidfd],[],[],0)[0]:signal.pidfd_send_signal(pidfd,signal.SIGKILL)
+    remaining=own['rowStartedMonotonicNs']/1e9+900-time.monotonic()
+    if remaining<=0:return
+    try:client.wait(timeout=min(10,remaining))
+    except subprocess.TimeoutExpired:return
+    stop_path=root/'stop-outcome.json'
+    if not stop_path.is_file():return
+    stop=load(stop_path);group=Path('/sys/fs/cgroup/system.slice')/(unit+'.service');events=group/'cgroup.events'
+    populated=dict(x.split() for x in events.read_text().splitlines()).get('populated') if events.is_file() else None
+    pidfd_terminal=bool(select.select([pidfd],[],[],0)[0]);absent=not group.exists()
+    if not failed_aggregate_terminal(stop,own,held,unit,client.poll() is not None,pidfd_terminal,absent,populated):return
+    code=str(error);safe=code if type(error) is RuntimeError and 0<len(code)<=128 and all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:.-' for c in code) else 'DETAIL_REDACTED'
+    value={'schema':'frl01-owned-ci-failure/v1','state':'FAILURE_WITH_ACTUAL_OWNED_TERMINAL_NOT_PRODUCT_PASS','sourceCommit':own['sourceCommit'],'sourceTree':own['sourceTree'],'jobId':own['jobId'],'rid':own['rid'],'errorType':type(error).__name__,'code':safe,'launcherExit':client.returncode,'retainedWorkerPidfdTerminal':pidfd_terminal,'ownGroupAbsentAfterDurableStopCause':absent,'cgroupPopulated':populated,'stopOutcome':stop,'ownHeldProof':held,'SDKProductSuccessInferred':False}
+    raw=json.dumps(value,indent=2).encode();need(len(raw)<=65536,'FAILURE_PROOF_BOUND')
+    target=Path(own['checkout'])/'artifacts/host-proof';target.mkdir(parents=True,exist_ok=True)
+    with (target/'failure.json').open('xb') as f:f.write(raw)
+    candidates=[root/'context.json',root/'held.json',stop_path,*list((root/'proof').glob('*.json'))]
+    need(sum(p.stat().st_size for p in candidates if p.is_file())+len(raw)<=8388608,'EXISTING_PROOF_ARTIFACT_LIMIT')
+    for source in candidates:
+        if source.is_file():need(source.stat().st_size<=2097152,'PROOF_FILE_LIMIT');(target/source.name).write_bytes(source.read_bytes())
+
 def main():
     bootstrap_start_ns=time.monotonic_ns()
-    p=argparse.ArgumentParser();p.add_argument('--mode',choices=['sdk0-control','product-ci'],required=True);p.add_argument('--admission',type=Path,required=True);p.add_argument('--admission-sha256',required=True);p.add_argument('--profile',type=Path,required=True);p.add_argument('--worker',action='store_true');p.add_argument('--context',type=Path);p.add_argument('--root',type=Path);p.add_argument('--token');p.add_argument('--remaining',type=float);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--mode',choices=['sdk0-control','input-graph','product-ci'],required=True);p.add_argument('--admission',type=Path,required=True);p.add_argument('--admission-sha256',required=True);p.add_argument('--profile',type=Path,required=True);p.add_argument('--worker',action='store_true');p.add_argument('--context',type=Path);p.add_argument('--root',type=Path);p.add_argument('--token');p.add_argument('--remaining',type=float);a=p.parse_args()
     need(sys.flags.isolated==1 and sys.flags.optimize==0,'ISOLATED_SOURCE_GUARDS')
     a.admission=a.admission.resolve();a.profile=a.profile.resolve()
     admission=load(a.admission);need(sha(a.admission)==a.admission_sha256 and admission['state']=='EXACT_SOURCE_INPUT_HOST_ROUTE_ADMITTED','NO_RUNTIME_ADMISSION')
@@ -207,8 +243,13 @@ def main():
         # Publish only bounded existing proof/application outputs after own terminal proof.
         target=Path(own['checkout'])/'artifacts/host-proof';target.mkdir(parents=True,exist_ok=False)
         sources=[root/'stop-outcome.json',root/'normal-caps-evidence.json',root/'consumer-host-admission.json',root/'context.json',root/'handshake.json',root/'held.json',root/'worker-result.json',root/'terminal.json'];need(sum(p.stat().st_size for p in sources)<=8388608,'EXISTING_PROOF_ARTIFACT_LIMIT')
+        sources.extend((root/'proof').glob('*.json'))
+        need(sum(p.stat().st_size for p in sources)<=8388608,'EXISTING_PROOF_ARTIFACT_LIMIT')
         for source in sources:
             need(source.stat().st_size<=2097152,'PROOF_FILE_LIMIT');(target/source.name).write_bytes(source.read_bytes())
+    except BaseException as error:
+        capture_linux_failure(error,root,own,locals().get('held'),unit,client,pidfd)
+        raise
     finally:
         if job:
             if not terminal:job.terminate()

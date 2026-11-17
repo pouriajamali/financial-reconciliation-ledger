@@ -2,7 +2,7 @@
   "schema": "frl01-own-sdk11-normal-route-contract/v1",
   "projectId": "01",
   "repository": "pouriajamali/financial-reconciliation-ledger",
-  "sourceOnly": true,
+  "sourceOnly": false,
   "parentAmendedContractSha256": "142dac81ae7f6e05f52319d3521d4825d5df028e37542b7623d16316ff7dd077",
   "productContract": {
     "path": "docs/CONTRACT.md",
@@ -34,5 +34,6 @@
   "clock": "One original row/bootstrap monotonic start and absolute end; held evidence, service hard deadline and callable context agree; no fresh deadline. Transport stage150s is a stricter inherited alarm inside the unchanged outer deadline.",
   "acceptance": "Original Windows144/Linux145 regressions,22 extracted checks and14 literal compatibility scenarios; existing locks/notices/signatures/advisories unchanged; full native prerequisite closure must pass before first SDK invocation.",
   "readiness": "Linux fact757ab belongs only to producer04 historical run/instance. Current own exact source/profile/held route must be separately admitted. Windows normal DENIED. Global SDK_READY false.",
-  "execution": "No authority to apply, acquire, run SDK/native/CI or publish from this source-only contract."
+  "execution": "Direct human owner authorized completing the upgrade on2026-11-17. Each actual controlled phase additionally requires exact externally supplied source/input/host admission, immutable producer evidence and independent own held kernel/deadline proof. This contract alone is not readiness or a manager approval.",
+  "inputGraphStage": "Only original phase1/2 six finite SDK data commands, sum30s, inside original100s lock slot and original900s controlled Linux row. No restore/acquisition/build/run/test/package or Windows-native claim. External dispatcher admission must bind exact signed source/tree; no new workflow/job/runner/artifact/cache or cap increase."
 }

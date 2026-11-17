@@ -138,3 +138,52 @@ def pipeline(route,context,root,proof,deadline,normal,normal_context,normal_dire
     records.append(run([python,'-I','-B','tools/check_tech_refresh.py','--old-package',route['oldPublicPackage'],'--old-archive',route['oldPublicArchive'],'--new-package',str(package),'--commit',context['sourceCommit'],'--work',str(root/'compatibility'),'--control',control['path'],'--control-sha256',control['sha256']],checkout,env,proof,'unchanged-literal-compatibility',90,deadline))
     # Redistributed graph/notices/audit and both RID final gates remain independent.
     return {'state':'PRODUCT_STAGES_EXITED_TERMINAL_PROOF_PENDING','records':records,'runtimeArtifactBytes':archives[0].stat().st_size,'SDKArtifactOrCacheUpload':False,'normalInput':receipt}
+
+
+def input_graphs(route,context,root,proof,deadline,normal,normal_context,normal_directory):
+    """Original allocated phase1/2 only; real own capped Linux SDK, no restore."""
+    need(context['rid']=='linux-x64','INPUT_GRAPH_QUALIFIED_LINUX_ONLY')
+    checkout=Path(context['checkout']);env=dict(os.environ)
+    for key in ('DOTNET_STARTUP_HOOKS','DOTNET_ADDITIONAL_DEPS','MSBuildSDKsPath','DirectoryBuildPropsPath','DirectoryBuildTargetsPath'):
+        need(not env.get(key),'INPUT_GRAPH_AMBIENT_OVERRIDE')
+    env.update(DOTNET_CLI_TELEMETRY_OPTOUT='1',DOTNET_GENERATE_ASPNET_CERTIFICATE='false',DOTNET_NOLOGO='1',DOTNET_EnableDiagnostics='0',DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE='true',MSBuildEnableWorkloadResolver='false',MSBUILDDISABLENODEREUSE='1',DOTNET_CLI_USE_MSBUILD_SERVER='0',DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER='1',UseSharedCompilation='false',DOTNET_MULTILEVEL_LOOKUP='0',DOTNET_PROCESSOR_COUNT='2')
+    for key,name in [('DOTNET_CLI_HOME','home'),('NUGET_PACKAGES','packages'),('NUGET_HTTP_CACHE_PATH','http'),('NUGET_PLUGINS_CACHE_PATH','plugins'),('NUGET_SCRATCH','scratch'),('TEMP','temp'),('TMP','temp')]:
+        path=root/name;path.mkdir(exist_ok=True);env[key]=str(path)
+    records=[]
+    with stage_alarm(150,deadline):
+        sdk,receipt=normal.transport('linux-x64',normal_directory,normal_context)
+        need(sdk==normal_directory/'sdk','OWN_FRESH_NORMAL_RESULT_PATH');validate_normal_receipt(receipt,context,normal_context)
+        records.extend(native_prerequisites(sdk,checkout,env,proof,deadline))
+    env.update(DOTNET_ROOT=str(sdk),DOTNET_ROOT_X64=str(sdk),DOTNET_HOST_PATH=str(sdk/'dotnet'),PATH=str(sdk)+os.pathsep+'/usr/bin:/bin')
+    begin=time.monotonic();end=min(deadline,begin+100)
+    work=root/'input-curation';work.mkdir();config=work/'NuGet.Config';config.write_text('<configuration><packageSources><clear /></packageSources><auditSources><clear /></auditSources></configuration>\n',encoding='utf-8')
+    archive=work/'source.zip'
+    subprocess.run(['/usr/bin/git','-C',str(checkout),'archive','--format=zip','--output='+str(archive),context['sourceCommit']],check=True,timeout=min(10,max(.1,end-time.monotonic())))
+    with zipfile.ZipFile(archive) as z:
+        members=z.infolist();payload_paths([x.filename for x in members]);need(len(members)<=256 and sum(x.file_size for x in members)<=33554432,'INPUT_GRAPH_SOURCE_BOUND')
+        for mode in ('portable','linux-x64','win-x64'):
+            source=work/mode/'source';source.mkdir(parents=True);(work/mode/'evidence').mkdir()
+            for item in members:
+                need((item.external_attr>>16)&0o170000!=0o120000,'INPUT_GRAPH_SOURCE_LINK')
+                target=source/item.filename
+                if item.is_dir():target.mkdir(parents=True,exist_ok=True)
+                else:target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(z.read(item))
+    plan=json.loads((checkout/'tools/ci/input-graph-plan.json').read_bytes());commands=plan['commands']
+    need(plan['schema']=='frl01-finite-input-graph-plan/v1' and len(commands)==6 and [x['id'] for x in commands]==['linux-x64-evaluate','portable-evaluate','win-x64-evaluate','linux-x64-restore-graph','portable-restore-graph','win-x64-restore-graph'],'INPUT_GRAPH_FINITE_COMMANDS')
+    products={}
+    for item in commands:
+        need(item['maxSeconds']==(4 if item['phase']==1 else 6),'INPUT_GRAPH_FIXED_TIMEOUT')
+        replace=lambda value:value.replace('<OWN_ACCEPTED_SDK>',str(sdk)).replace('<OWN_WORK>',str(root)).replace('<APPROVED_LOCAL_ONLY_NUGET_CONFIG>',str(config))
+        argv=[replace(x) for x in item['argv']];need(argv[0]==str(sdk/'dotnet') and argv[1]=='msbuild' and all('<' not in x for x in argv),'INPUT_GRAPH_FIXED_ARGV')
+        normal.inspect_sdk('linux-x64',sdk,normal_context)
+        records.append(run(argv,checkout,env,proof,item['id'],item['maxSeconds'],end))
+        path=proof/(item['id']+'.stdout') if item['phase']==1 else Path(replace(item['output']))
+        need(path.is_file() and not path.is_symlink() and path.stat().st_size<=1048576,'INPUT_GRAPH_OUTPUT_BOUND')
+        value=json.loads(path.read_text(encoding='utf-8-sig'))
+        if item['phase']==1:
+            props=value['Properties'];need(props['TargetFramework']=='net11.0' and props['LangVersion']=='15.0' and props['RuntimeFrameworkVersion']=='11.0.0','INPUT_GRAPH_TARGET_IDENTITY')
+        else:need(type(value.get('projects')) is dict and 1<=len(value['projects'])<=2,'INPUT_GRAPH_PROJECT_BOUND')
+        products[item['id']]={'bytes':path.stat().st_size,'sha256':sha(path),'value':value}
+    result={'schema':'frl01-actual-sdk-input-graphs/v1','state':'ACTUAL_SDK_GRAPHS_OBSERVED_NOT_CURATED_LOCKS_NOT_PRODUCT_ADMITTED','sourceCommit':context['sourceCommit'],'sourceTree':context['sourceTree'],'hostRID':'linux-x64','dataOnlyTargetRIDs':['portable','linux-x64','win-x64'],'commands':records,'graphs':products,'elapsedWithinOriginal100SecondsSlot':time.monotonic()-begin,'normalInput':receipt,'packageAcquisitions':0,'restores':0,'builds':0,'tests':0,'WindowsNativeExecutions':0}
+    raw=json.dumps(result,separators=(',',':')).encode();need(len(raw)<=2097152,'INPUT_GRAPH_PROOF_BOUND');(proof/'input-graphs.json').write_bytes(raw)
+    return result

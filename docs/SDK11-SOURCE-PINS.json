@@ -22,7 +22,7 @@
     {
       "path": ".github/workflows/verify.yml",
       "mode": "100644",
-      "gitBlob": "fe197e1566d68cec1660f2c2d876c1af28bb5962"
+      "gitBlob": "18c72118acb2798aba7e0cf62006332dbacb6131"
     },
     {
       "path": ".gitignore",
@@ -57,7 +57,7 @@
     {
       "path": "README.md",
       "mode": "100644",
-      "gitBlob": "13e52d7255804ac6a5852ac97e86cb9b34a74e54"
+      "gitBlob": "80446dd8a691c5c8224f1d64c0b02a8bbb551354"
     },
     {
       "path": "SIGNING-PUBLIC-KEY.pub",
@@ -97,12 +97,12 @@
     {
       "path": "docs/RELEASE-v0.1.0-preview.3.md",
       "mode": "100644",
-      "gitBlob": "e42707d10ba44110c9b111739f9e02bf6adcecfd"
+      "gitBlob": "2a56f51bf7ef434c46ea1e9752beaefb42d25cc4"
     },
     {
       "path": "docs/SDK11-OWN-ROUTE-CONTRACT.json",
       "mode": "100644",
-      "gitBlob": "148f819a69a533027a1fa9e1cf97595d630a3fc3"
+      "gitBlob": "16ce56acc148fcb2f4c1397c33be6161e30a2fce"
     },
     {
       "path": "global.json",
@@ -187,7 +187,7 @@
     {
       "path": "tools/ci/MANAGER-ADMISSION.json",
       "mode": "100644",
-      "gitBlob": "11e03c89fba98edca2236310019a75df9ad0c0e5"
+      "gitBlob": "65791ed063343c6acb673e39ade572d5ace9ca6f"
     },
     {
       "path": "tools/ci/PROFILE.json",
@@ -197,7 +197,7 @@
     {
       "path": "tools/ci/ci_host_controller.py",
       "mode": "100644",
-      "gitBlob": "be1f6ede24e380d833f041cdb5d81a75a127a582"
+      "gitBlob": "8598484e9900631edaac694addd99743ee5dc7df"
     },
     {
       "path": "tools/ci/ci_host_guard.py",
@@ -207,7 +207,7 @@
     {
       "path": "tools/ci/ci_pipeline.py",
       "mode": "100644",
-      "gitBlob": "20eafd202a78ffe3ba7b203b7f7675e2bcd77a96"
+      "gitBlob": "6c55ea020acd50940160acd479048fcc45055b9b"
     },
     {
       "path": "tools/ci/frl01_phase.py",
@@ -223,6 +223,16 @@
       "path": "tools/ci/host_handshake.schema.json",
       "mode": "100644",
       "gitBlob": "6eb3e18285874b6412d6ec4ff8f5a64924e67e7a"
+    },
+    {
+      "path": "tools/ci/input-graph-plan.json",
+      "mode": "100644",
+      "gitBlob": "5937d2a388791688a05ce0542c10754b9857d1e9"
+    },
+    {
+      "path": "tools/ci/test_ci_failure_terminal.py",
+      "mode": "100644",
+      "gitBlob": "56398b43f4cb01503c112d01c9033d296bc23ee2"
     },
     {
       "path": "tools/ci/test_ci_host_guard.py",

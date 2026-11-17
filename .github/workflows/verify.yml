@@ -5,6 +5,20 @@ on:
     tags: ['*']
   pull_request:
   workflow_dispatch:
+    inputs:
+      phase:
+        description: Existing controlled row phase
+        type: choice
+        options: [product-ci, input-graph]
+        default: product-ci
+      admission_json:
+        description: Exact source/input/host admission template from authorized dispatcher
+        type: string
+        required: true
+      admission_sha256:
+        description: SHA256 of exact admission template bytes
+        type: string
+        required: true
 permissions:
   contents: read
 env:
@@ -45,11 +59,7 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        include:
-          - os: windows-2025
-            rid: win-x64
-          - os: ubuntu-24.04
-            rid: linux-x64
+        include: ${{ github.event_name == 'workflow_dispatch' && inputs.phase == 'input-graph' && fromJSON('[{"os":"ubuntu-24.04","rid":"linux-x64"}]') || fromJSON('[{"os":"windows-2025","rid":"win-x64"},{"os":"ubuntu-24.04","rid":"linux-x64"}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -58,24 +68,38 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          FRL01_ADMISSION_JSON: ${{ inputs.admission_json }}
+          FRL01_ADMISSION_TEMPLATE_SHA256: ${{ inputs.admission_sha256 }}
+          FRL01_PHASE: ${{ inputs.phase || 'product-ci' }}
         run: |
           $python = if ($IsWindows) { (Get-Command python -CommandType Application -ErrorAction Stop).Source } else { '/usr/bin/python3' }
           $admission = $env:FRL01_CI_ADMISSION_PATH
           $hash = $env:FRL01_CI_ADMISSION_SHA256
+          if ($env:FRL01_ADMISSION_JSON) {
+            if ($env:GITHUB_EVENT_NAME -ne 'workflow_dispatch' -or $env:FRL01_ADMISSION_TEMPLATE_SHA256 -notmatch '^[0-9a-f]{64}$') { throw 'HOLD: external exact dispatch admission required' }
+            $raw = [Text.Encoding]::UTF8.GetBytes($env:FRL01_ADMISSION_JSON)
+            if ($raw.Length -gt 60000 -or [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($raw)).ToLowerInvariant() -ne $env:FRL01_ADMISSION_TEMPLATE_SHA256) { throw 'HOLD: admission template identity differs' }
+            $mapped = $env:FRL01_ADMISSION_JSON.Replace('<CHECKOUT>', $env:GITHUB_WORKSPACE.Replace('\', '/')).Replace('<TEMP>', $env:RUNNER_TEMP.Replace('\', '/'))
+            $admission = Join-Path $env:RUNNER_TEMP ('frl01-external-admission-' + $env:GITHUB_RUN_ID + '-' + $env:GITHUB_RUN_ATTEMPT + '.json')
+            if (Test-Path -LiteralPath $admission) { throw 'HOLD: admission path already exists' }
+            [IO.File]::WriteAllText($admission, $mapped, [Text.UTF8Encoding]::new($false))
+            $hash = (Get-FileHash -LiteralPath $admission -Algorithm SHA256).Hash.ToLowerInvariant()
+          }
           if (-not $admission -or $hash -notmatch '^[0-9a-f]{64}$') { throw 'HOLD: exact external own admission is absent' }
           if ((Get-FileHash -LiteralPath $admission -Algorithm SHA256).Hash.ToLowerInvariant() -ne $hash) { throw 'HOLD: own admission hash differs' }
-          & $python -I -B tools/ci/ci_host_controller.py --mode product-ci --admission $admission --admission-sha256 $hash --profile tools/ci/PROFILE.json
+          & $python -I -B tools/ci/ci_host_controller.py --mode $env:FRL01_PHASE --admission $admission --admission-sha256 $hash --profile tools/ci/PROFILE.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        if: (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch') && inputs.phase != 'input-graph'
         with:
-          retention-days: ${{ (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch') && 7 || 3 }}
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/') && 7 || 3 }}
           name: tested-${{ matrix.rid }}
           path: artifacts/delivery/*
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          retention-days: ${{ (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch') && 7 || 3 }}
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/') && 7 || 3 }}
           name: proof-${{ matrix.rid }}
           path: |
             artifacts/host-proof/*.json

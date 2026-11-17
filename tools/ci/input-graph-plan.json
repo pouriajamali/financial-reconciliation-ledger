@@ -1,0 +1,145 @@
+{
+  "schema": "frl01-finite-input-graph-plan/v1",
+  "commands": [
+    {
+      "id": "linux-x64-evaluate",
+      "kind": "SDK_MSBUILD_EVALUATION",
+      "argv": [
+        "<OWN_ACCEPTED_SDK>/dotnet",
+        "msbuild",
+        "<OWN_WORK>/input-curation/linux-x64/source/src/Ledger/Ledger.csproj",
+        "-nologo",
+        "-getProperty:TargetFramework,LangVersion,RuntimeFrameworkVersion,RuntimeIdentifier,SelfContained,UseAppHost",
+        "-getItem:ProjectReference,PackageReference,FrameworkReference,KnownFrameworkReference,KnownAppHostPack",
+        "-p:TargetFramework=net11.0",
+        "-p:RuntimeFrameworkVersion=11.0.0",
+        "-p:RestoreConfigFile=<APPROVED_LOCAL_ONLY_NUGET_CONFIG>",
+        "-p:RestorePackagesPath=<OWN_WORK>/input-curation/packages",
+        "-p:RestoreDisableParallel=true",
+        "-p:RuntimeIdentifier=linux-x64",
+        "-p:SelfContained=true"
+      ],
+      "maxSeconds": 4,
+      "stdout": "<OWN_WORK>/input-curation/linux-x64/evidence/evaluated.json",
+      "stderr": "<OWN_WORK>/input-curation/linux-x64/evidence/evaluated.stderr",
+      "phase": 1
+    },
+    {
+      "id": "portable-evaluate",
+      "kind": "SDK_MSBUILD_EVALUATION",
+      "argv": [
+        "<OWN_ACCEPTED_SDK>/dotnet",
+        "msbuild",
+        "<OWN_WORK>/input-curation/portable/source/tests/Ledger.Tests/Ledger.Tests.csproj",
+        "-nologo",
+        "-getProperty:TargetFramework,LangVersion,RuntimeFrameworkVersion,RuntimeIdentifier,SelfContained,UseAppHost",
+        "-getItem:ProjectReference,PackageReference,FrameworkReference,KnownFrameworkReference,KnownAppHostPack",
+        "-p:TargetFramework=net11.0",
+        "-p:RuntimeFrameworkVersion=11.0.0",
+        "-p:RestoreConfigFile=<APPROVED_LOCAL_ONLY_NUGET_CONFIG>",
+        "-p:RestorePackagesPath=<OWN_WORK>/input-curation/packages",
+        "-p:RestoreDisableParallel=true",
+        "-p:SelfContained=false"
+      ],
+      "maxSeconds": 4,
+      "stdout": "<OWN_WORK>/input-curation/portable/evidence/evaluated.json",
+      "stderr": "<OWN_WORK>/input-curation/portable/evidence/evaluated.stderr",
+      "phase": 1
+    },
+    {
+      "id": "win-x64-evaluate",
+      "kind": "SDK_MSBUILD_EVALUATION",
+      "argv": [
+        "<OWN_ACCEPTED_SDK>/dotnet",
+        "msbuild",
+        "<OWN_WORK>/input-curation/win-x64/source/src/Ledger/Ledger.csproj",
+        "-nologo",
+        "-getProperty:TargetFramework,LangVersion,RuntimeFrameworkVersion,RuntimeIdentifier,SelfContained,UseAppHost",
+        "-getItem:ProjectReference,PackageReference,FrameworkReference,KnownFrameworkReference,KnownAppHostPack",
+        "-p:TargetFramework=net11.0",
+        "-p:RuntimeFrameworkVersion=11.0.0",
+        "-p:RestoreConfigFile=<APPROVED_LOCAL_ONLY_NUGET_CONFIG>",
+        "-p:RestorePackagesPath=<OWN_WORK>/input-curation/packages",
+        "-p:RestoreDisableParallel=true",
+        "-p:RuntimeIdentifier=win-x64",
+        "-p:SelfContained=true"
+      ],
+      "maxSeconds": 4,
+      "stdout": "<OWN_WORK>/input-curation/win-x64/evidence/evaluated.json",
+      "stderr": "<OWN_WORK>/input-curation/win-x64/evidence/evaluated.stderr",
+      "phase": 1
+    },
+    {
+      "id": "linux-x64-restore-graph",
+      "kind": "SDK_GRAPH_ONLY_NO_RESTORE_BUILD_RUN",
+      "argv": [
+        "<OWN_ACCEPTED_SDK>/dotnet",
+        "msbuild",
+        "<OWN_WORK>/input-curation/linux-x64/source/src/Ledger/Ledger.csproj",
+        "-nologo",
+        "-t:GenerateRestoreGraphFile",
+        "-p:RestoreGraphOutputPath=<OWN_WORK>/input-curation/linux-x64/evidence/restore.dg.json",
+        "-p:TargetFramework=net11.0",
+        "-p:RuntimeFrameworkVersion=11.0.0",
+        "-p:RestoreConfigFile=<APPROVED_LOCAL_ONLY_NUGET_CONFIG>",
+        "-p:RestorePackagesPath=<OWN_WORK>/input-curation/packages",
+        "-p:RestoreDisableParallel=true",
+        "-p:RuntimeIdentifier=linux-x64",
+        "-p:SelfContained=true"
+      ],
+      "maxSeconds": 6,
+      "stdout": "<OWN_WORK>/input-curation/linux-x64/evidence/restore-graph.stdout",
+      "stderr": "<OWN_WORK>/input-curation/linux-x64/evidence/restore-graph.stderr",
+      "phase": 2,
+      "output": "<OWN_WORK>/input-curation/linux-x64/evidence/restore.dg.json"
+    },
+    {
+      "id": "portable-restore-graph",
+      "kind": "SDK_GRAPH_ONLY_NO_RESTORE_BUILD_RUN",
+      "argv": [
+        "<OWN_ACCEPTED_SDK>/dotnet",
+        "msbuild",
+        "<OWN_WORK>/input-curation/portable/source/tests/Ledger.Tests/Ledger.Tests.csproj",
+        "-nologo",
+        "-t:GenerateRestoreGraphFile",
+        "-p:RestoreGraphOutputPath=<OWN_WORK>/input-curation/portable/evidence/restore.dg.json",
+        "-p:TargetFramework=net11.0",
+        "-p:RuntimeFrameworkVersion=11.0.0",
+        "-p:RestoreConfigFile=<APPROVED_LOCAL_ONLY_NUGET_CONFIG>",
+        "-p:RestorePackagesPath=<OWN_WORK>/input-curation/packages",
+        "-p:RestoreDisableParallel=true",
+        "-p:SelfContained=false"
+      ],
+      "maxSeconds": 6,
+      "stdout": "<OWN_WORK>/input-curation/portable/evidence/restore-graph.stdout",
+      "stderr": "<OWN_WORK>/input-curation/portable/evidence/restore-graph.stderr",
+      "phase": 2,
+      "output": "<OWN_WORK>/input-curation/portable/evidence/restore.dg.json"
+    },
+    {
+      "id": "win-x64-restore-graph",
+      "kind": "SDK_GRAPH_ONLY_NO_RESTORE_BUILD_RUN",
+      "argv": [
+        "<OWN_ACCEPTED_SDK>/dotnet",
+        "msbuild",
+        "<OWN_WORK>/input-curation/win-x64/source/src/Ledger/Ledger.csproj",
+        "-nologo",
+        "-t:GenerateRestoreGraphFile",
+        "-p:RestoreGraphOutputPath=<OWN_WORK>/input-curation/win-x64/evidence/restore.dg.json",
+        "-p:TargetFramework=net11.0",
+        "-p:RuntimeFrameworkVersion=11.0.0",
+        "-p:RestoreConfigFile=<APPROVED_LOCAL_ONLY_NUGET_CONFIG>",
+        "-p:RestorePackagesPath=<OWN_WORK>/input-curation/packages",
+        "-p:RestoreDisableParallel=true",
+        "-p:RuntimeIdentifier=win-x64",
+        "-p:SelfContained=true"
+      ],
+      "maxSeconds": 6,
+      "stdout": "<OWN_WORK>/input-curation/win-x64/evidence/restore-graph.stdout",
+      "stderr": "<OWN_WORK>/input-curation/win-x64/evidence/restore-graph.stderr",
+      "phase": 2,
+      "output": "<OWN_WORK>/input-curation/win-x64/evidence/restore.dg.json"
+    }
+  ],
+  "boundary": "First six previously allocated SDK data commands only; no package acquisition/restore/build/run/test/publish; not lock or product admission."
+}
