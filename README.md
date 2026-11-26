@@ -23,7 +23,7 @@ These are existing-host observations, not clean-machine certification.
 
 ## Discrepancy reports (introduced in preview.2)
 
-The [offline HTML viewer](tools/report-viewer.html) opens a matching pair of
+The [offline HTML viewer](https://github.com/pouriajamali/financial-reconciliation-ledger/releases/tag/report-viewer-v0.1.0-preview.1) opens a matching pair of
 `summary.json` and `discrepancies.json` from standalone `reconcile`.
 Download the HTML and open it locally in a current browser. Select both files
 from one report folder, choose **Open report**, then filter by discrepancy
