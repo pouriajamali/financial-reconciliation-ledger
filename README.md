@@ -23,6 +23,16 @@ These are existing-host observations, not clean-machine certification.
 
 ## Discrepancy reports (introduced in preview.2)
 
+The [offline HTML viewer](tools/report-viewer.html) opens a matching pair of
+`summary.json` and `discrepancies.json` from standalone `reconcile`.
+Download the HTML and open it locally in a current browser. Select both files
+from one report folder, choose **Open report**, then filter by discrepancy
+type. The viewer checks the exact summary SHA-256 and its book, statement and
+snapshot identities before showing any rows. The files stay in the browser.
+The [sample negative report](#try-the-ready-package) shows `DEMO_A` under
+**Wrong amount** at statement row 1.
+See the [viewer guide](docs/REPORT-VIEWER.md).
+
 Standalone `reconcile` retains the complete per-row discrepancy details introduced
 in preview.2. Use the versioned packages and verification files below; the
 immutable older preview remains available for its original behavior.

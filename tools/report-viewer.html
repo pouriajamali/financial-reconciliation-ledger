@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Ledger discrepancy report</title>
+<style>
+  :root { font: 16px/1.5 system-ui, sans-serif; color: #19242f; background: #f4f6f8; }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  main { max-width: 64rem; margin: auto; padding: 2rem 1.15rem; }
+  h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.5rem); }
+  h2 { margin-top: 0; font-size: 1.15rem; }
+  header p { color: #485967; }
+  section { background: white; border: 1px solid #c4d0d8; border-radius: .7rem;
+            padding: 1rem; margin-top: 1.25rem; }
+  .files { display: flex; flex-wrap: wrap; gap: 1rem; }
+  .files > label { display: block; flex: 1 1 16rem; min-width: 0; }
+  input { display: block; margin-top: .3rem; max-width: 100%; }
+  button, select { font: inherit; padding: .35rem .6rem; border: 1px solid #607381;
+                   background: white; color: #19242f; border-radius: .35rem; }
+  button { margin-top: 1rem; background: #075863; color: white; border-color: #075863; }
+  [role="alert"] { color: #8e2323; font-weight: 600; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; margin-top: .65rem; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: .55rem .5rem; border-bottom: 1px solid #d4dfe5; }
+  th { background: #eaf0f3; }
+  tbody th { background: white; font-weight: 650; }
+  #outcome { font-weight: 650; }
+  #counts, #visible { color: #485967; }
+</style>
+<main>
+  <header>
+    <h1>Ledger discrepancy report</h1>
+    <p>Inspect a synthetic statement comparison. Both files stay in your browser.</p>
+  </header>
+  <section aria-label="Open a report">
+    <div class="files">
+      <label>Summary file <input id="summary" type="file" accept=".json,application/json"></label>
+      <label>Discrepancy file <input id="details" type="file" accept=".json,application/json"></label>
+    </div>
+    <button id="open" type="button">Open report</button>
+    <p id="error" role="alert" hidden></p>
+  </section>
+  <section id="report" aria-labelledby="report-title" hidden>
+    <h2 id="report-title">Comparison result</h2>
+    <p id="outcome"></p>
+    <p id="counts"></p>
+    <label for="filter">Discrepancy type</label>
+    <select id="filter">
+      <option value="">All types</option>
+      <option value="WRONG_AMOUNT">Wrong amount</option>
+      <option value="MISSING_REQUEST_ID">Missing request</option>
+      <option value="UNEXPECTED_REQUEST_ID">Unexpected request</option>
+      <option value="DUPLICATE_REQUEST_ID">Duplicate request</option>
+    </select>
+    <p id="visible" role="status"></p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Discrepancy</th><th scope="col">Request</th>
+          <th scope="col">Statement row</th><th scope="col">Ledger entry</th>
+          <th scope="col">Expected minor units</th><th scope="col">Observed minor units</th>
+          <th scope="col">First statement row</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<script>
+  'use strict';
+  const element = id => document.getElementById(id);
+  const types = Object.freeze({
+    WRONG_AMOUNT: ['Wrong amount', 'wrongAmount'],
+    MISSING_REQUEST_ID: ['Missing request', 'missing'],
+    UNEXPECTED_REQUEST_ID: ['Unexpected request', 'unexpected'],
+    DUPLICATE_REQUEST_ID: ['Duplicate request', 'duplicates'],
+  });
+  const summaryInput = element('summary');
+  const detailsInput = element('details');
+  const filter = element('filter');
+  let view;
+  let generation = 0;
+
+  function requireReport(condition, message) {
+    if (!condition) throw new Error(message);
+  }
+
+  async function read(file, limit) {
+    requireReport(file && file.size > 0 && file.size <= limit, 'Select nonempty files within the report size limits.');
+    const bytes = await file.arrayBuffer();
+    requireReport(bytes.byteLength === file.size, 'A selected file changed while reading.');
+    try {
+      return { bytes, value: JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) };
+    } catch {
+      throw new Error('A selected file is not valid UTF-8 JSON.');
+    }
+  }
+
+  const integer = (value, minimum) => Number.isSafeInteger(value) && value >= minimum;
+  const index = value => value === null || integer(value, 1);
+  const amount = value => value === null || integer(value, 0);
+  const hex = (value, length) => typeof value === 'string' && value.length === length && /^[0-9a-f]+$/.test(value);
+  const scopeFlags = ['bookMismatch', 'unitMismatch', 'scopeMismatch'];
+
+  async function readReport(summaryFile, detailsFile) {
+    const [summary, details] = await Promise.all([read(summaryFile, 65536), read(detailsFile, 2 * 1024 * 1024)]);
+    const a = summary.value;
+    const b = details.value;
+    requireReport(a?.schema === 'synthetic-reconciliation-report-v1'
+      && b?.schema === 'synthetic-reconciliation-discrepancies-v1', 'Select the two files from standalone reconcile.');
+    requireReport(globalThis.crypto?.subtle, 'Use a local browser with Web Crypto support to verify this report.');
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', summary.bytes));
+    const summaryHash = Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
+    requireReport(summaryHash === b.summarySha256, 'These files do not belong to the same report. The summary SHA-256 differs.');
+    const result = a.result;
+    requireReport(result?.complete === true && ['pass', 'fail'].includes(result.outcome)
+      && scopeFlags.every(flag => typeof result[flag] === 'boolean')
+      && hex(a.bookId, 32) && hex(a.statementSha256, 64) && hex(a.snapshotReceiptListSha256, 64)
+      && integer(result.snapshotSequence, 0)
+      && a.bookId === b.bookId && a.statementSha256 === b.statementSha256
+      && a.snapshotReceiptListSha256 === b.snapshotReceiptListSha256
+      && result.snapshotSequence === b.throughSequence, 'The book, statement or snapshot report fields are inconsistent.');
+    requireReport(Array.isArray(b.issues) && b.issues.length <= 4000, 'The report exceeds the discrepancy limit.');
+
+    const counts = Object.fromEntries(Object.keys(types).map(code => [code, 0]));
+    for (const issue of b.issues) {
+      requireReport(issue && Object.hasOwn(types, issue.code)
+        && typeof issue.requestId === 'string' && issue.requestId.length > 0 && issue.requestId.length <= 64
+        && index(issue.statementRowIndex) && index(issue.entrySequence) && index(issue.firstStatementRowIndex)
+        && amount(issue.expectedAmountMinor) && amount(issue.actualAmountMinor), 'A discrepancy row is invalid.');
+      counts[issue.code]++;
+    }
+    requireReport(Object.entries(types).every(([code, [, count]]) => result[count] === counts[code]),
+      'Discrepancy counts differ from the summary.');
+    const scope = [['bookMismatch', 'book'], ['unitMismatch', 'unit/scale'], ['scopeMismatch', 'snapshot scope']]
+      .filter(([flag]) => result[flag]).map(([, label]) => label);
+    const agree = b.issues.length === 0 && scope.length === 0;
+    requireReport(result.outcome === (agree ? 'pass' : 'fail') && result.exitCode === (agree ? 0 : 2),
+      'The summary outcome conflicts with the reported discrepancies or scope flags.');
+    return { issues: b.issues, counts, scope, agree, sequence: result.snapshotSequence };
+  }
+
+  function renderRows() {
+    if (!view) return;
+    const issues = view.issues.filter(issue => !filter.value || issue.code === filter.value);
+    const rows = document.createDocumentFragment();
+    for (const issue of issues) {
+      const row = document.createElement('tr');
+      const label = document.createElement('th');
+      label.scope = 'row';
+      label.textContent = types[issue.code][0];
+      row.append(label);
+      for (const value of [issue.requestId, issue.statementRowIndex, issue.entrySequence,
+        issue.expectedAmountMinor, issue.actualAmountMinor, issue.firstStatementRowIndex]) {
+        const cell = document.createElement('td');
+        cell.textContent = value === null ? '—' : String(value);
+        row.append(cell);
+      }
+      rows.append(row);
+    }
+    element('rows').replaceChildren(rows);
+    element('visible').textContent = `Showing ${issues.length} of ${view.issues.length} issue records`;
+  }
+
+  function clear() {
+    generation++;
+    view = undefined;
+    element('report').hidden = true;
+    element('error').hidden = true;
+    element('rows').replaceChildren();
+  }
+
+  summaryInput.addEventListener('change', clear);
+  detailsInput.addEventListener('change', clear);
+  filter.addEventListener('change', renderRows);
+  element('open').addEventListener('click', async () => {
+    clear();
+    const request = generation;
+    try {
+      const loaded = await readReport(summaryInput.files[0], detailsInput.files[0]);
+      if (request !== generation) return;
+      view = loaded;
+      filter.value = '';
+      const outcome = view.agree ? 'Comparison agrees' : 'Comparison reports a discrepancy';
+      const flags = view.scope.length ? ` Scope mismatch: ${view.scope.join(', ')}.` : '';
+      element('outcome').textContent = `${outcome} at snapshot ${view.sequence}.${flags}`;
+      element('counts').textContent = Object.entries(types).map(([code, [label]]) =>
+        `${label}: ${view.counts[code]}`).join(' · ') + '. Types can overlap for the same statement row.';
+      renderRows();
+      element('report').hidden = false;
+    } catch (error) {
+      if (request !== generation) return;
+      element('error').textContent = error.message;
+      element('error').hidden = false;
+    }
+  });
+</script>
+</html>
